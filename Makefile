@@ -15,7 +15,7 @@ install:
 	CGO_ENABLED=0 go install  $(BUILD_FLAGS) -tags $(BUILD_TAGS) ./main.go
 
 tools:
-	CGO_ENABLED=0 go build  -o $OUTPUTTOOLDIR/base64show  ./tool/base64show.go
+	CGO_ENABLED=0 go build  -o $OUTPUTTOOLDIR/base64show  ./tool/base64_show.go
 	CGO_ENABLED=0 go build  -o $OUTPUTTOOLDIR/keygen      ./tool/keygen.go
 
 fmt:

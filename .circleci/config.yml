@@ -77,7 +77,7 @@ jobs:
 
             # upgrade ankrchain in daemon side
             CHARTS_JSON=$(curl -s $CHARTMUSEUM_URL/ankr/daemon/api/charts)
-            ANKRCHAIN_TGZ=$(echo -e ${CHARTS_JSON//\"/\\n} | grep charts/tendermint-)
+            ANKRCHAIN_TGZ=$(echo -e ${CHARTS_JSON//\"/\\n} | grep charts/ankrchain-)
 
             mkdir chart_tmp && cd chart_tmp
             TGZ_FILE=${ANKRCHAIN_TGZ//charts\/}
