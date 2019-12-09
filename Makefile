@@ -3,8 +3,8 @@ OUTPUT?=build
 NODE_NAME=ankrchain
 COMPILER_NAME=contract-compiler
 
-NODE_VERSION=1.0.0
-COMPILER_VERSION=1.0.0
+NODE_VERSION=1.0.2
+COMPILER_VERSION=1.0.2
 BUILD_FLAGS_NODE = -ldflags "-X github.com/Ankr-network/ankr-chain/version.NodeVersion=${NODE_VERSION} -X github.com/Ankr-network/ankr-chain/version.GitCommit=`git rev-parse --short=8 HEAD`"
 BUILD_FLAGS_COMPILER = -ldflags "-X github.com/Ankr-network/ankr-chain/version.CompilerVersion=${COMPILER_VERSION} -X github.com/Ankr-network/ankr-chain/version.GitCommit=`git rev-parse --short=8 HEAD`"
 
