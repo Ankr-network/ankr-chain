@@ -1,129 +1,6 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ankrchain-1
-spec:
-  selector:
-    matchLabels:
-      app: ankr-chain
-      id: ankrchain-1
-  replicas: 1
-  updateStrategy:
-    type: RollingUpdate
-  serviceName: ankrchain-1
-  template:
-    metadata:
-      labels:
-        app: ankr-chain
-        id: ankrchain-1
-    spec:
-      imagePullSecrets:
-        - name: aws-ecr
-      volumes:
-        - name: tendermint-pvc-1
-          persistentVolumeClaim:
-            claimName: tendermint-pvc-1
-      containers:
-        - name: ankrchain
-          image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/ankr-chain:feat
-          imagePullPolicy: Always
-          ports:
-            - name: p2p-1
-              containerPort: 26656
-            - name: rpc
-              containerPort: 26657
-            - name: abci
-              containerPort: 26658
-          volumeMounts:
-            - name: tendermint-pvc-1
-              mountPath: /ankrchain/data
-
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: ankrchain-2
-spec:
-  selector:
-    matchLabels:
-      app: ankr-chain
-      id: ankrchain-2
-  replicas: 1
-  updateStrategy:
-    type: RollingUpdate
-  serviceName: ankrchain-2
-  template:
-    metadata:
-      labels:
-        app: ankr-chain
-        id: ankrchain-2
-    spec:
-      imagePullSecrets:
-        - name: aws-ecr
-      volumes:
-        - name: tendermint-pvc-2
-          persistentVolumeClaim:
-            claimName: tendermint-pvc-2
-      containers:
-        - name: ankrchain
-          image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/ankr-chain:feat
-          imagePullPolicy: Always
-          ports:
-            - name: p2p-2
-              containerPort: 26656
-            - name: rpc
-              containerPort: 26657
-            - name: abci
-              containerPort: 26658
-          volumeMounts:
-            - name: tendermint-pvc-2
-              mountPath: /ankrchain/data
-
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: ankrchain-3
-spec:
-  selector:
-    matchLabels:
-      app: ankr-chain
-      id: ankrchain-3
-  replicas: 1
-  updateStrategy:
-    type: RollingUpdate
-  serviceName: ankrchain-3
-  template:
-    metadata:
-      labels:
-        app: ankr-chain
-        id: ankrchain-3
-    spec:
-      imagePullSecrets:
-        - name: aws-ecr
-      volumes:
-        - name: tendermint-pvc-3
-          persistentVolumeClaim:
-            claimName: tendermint-pvc-3
-      containers:
-        - name: ankrchain
-          image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/ankr-chain:feat
-          imagePullPolicy: Always
-          ports:
-            - name: p2p-3
-              containerPort: 26656
-            - name: rpc
-              containerPort: 26657
-            - name: abci
-              containerPort: 26658
-          volumeMounts:
-            - name: tendermint-pvc-3
-              mountPath: /ankrchain/data
-
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
   name: ankrchain-4
 spec:
   selector:
@@ -141,22 +18,22 @@ spec:
         id: ankrchain-4
     spec:
       imagePullSecrets:
-        - name: aws-ecr
+      - name: aws-ecr
       volumes:
-        - name: tendermint-pvc-4
-          persistentVolumeClaim:
-            claimName: tendermint-pvc-4
+      - name: tendermint-pvc-4
+        persistentVolumeClaim:
+          claimName: tendermint-pvc-4
       containers:
-        - name: ankrchain
-          image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/ankr-chain:feat
-          imagePullPolicy: Always
-          ports:
-            - name: p2p-4
-              containerPort: 26656
-            - name: rpc
-              containerPort: 26657
-            - name: abci
-              containerPort: 26658
-          volumeMounts:
-            - name: tendermint-pvc-4
-              mountPath: /ankrchain/data
+      - name: ankrchain
+        image: 815280425737.dkr.ecr.us-west-2.amazonaws.com/ankr-chain:feat
+        imagePullPolicy: Always
+        ports:
+        - name: p2p-4
+          containerPort: 26656
+        - name: rpc
+          containerPort: 26657
+        - name: abci
+          containerPort: 26658
+        volumeMounts:
+        - name: tendermint-pvc-4
+          mountPath: /ankrchain/data

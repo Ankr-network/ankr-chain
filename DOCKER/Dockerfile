@@ -66,3 +66,6 @@ COPY DOCKER/tmhome/config/node_key.*.json "$TMHOME"/config/
 COPY DOCKER/tmhome/config/priv_validator_key.*.json "$TMHOME"/config/
 COPY DOCKER/tmhome/config/priv_validator_state.json "$TMHOME"/config/
 RUN chown -R tmuser:tmuser "$TMHOME"/config "$TMHOME"/config
+
+USER root
+CMD ["ankrchain","-h"]
