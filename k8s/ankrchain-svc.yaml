@@ -40,6 +40,63 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: ankrchain-1
+  labels:
+    app: ankrchain-1
+spec:
+  selector:
+    id: ankrchain-1
+  ports:
+  - name: p2p-1
+    port: 26656
+    targetPort: 26656
+  - name: rpc
+    port: 26657
+    targetPort: 26657
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ankrchain-2
+  labels:
+    app: ankrchain-2
+spec:
+  selector:
+    id: ankrchain-2
+  ports:
+  - name: p2p-2
+    port: 26656
+    targetPort: 26656
+  - name: rpc
+    port: 26657
+    targetPort: 26657
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ankrchain-3
+  labels:
+    app: ankrchain-3
+spec:
+  selector:
+    id: ankrchain-3
+  ports:
+  - name: p2p-3
+    port: 26656
+    targetPort: 26656
+  - name: rpc
+    port: 26657
+    targetPort: 26657
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: ankrchain-4
   labels:
     app: ankrchain-4

@@ -18,31 +18,31 @@ spec:
         id: ankrchain-1
     spec:
       imagePullSecrets:
-      - name: aws-ecr
+        - name: aws-ecr
       volumes:
-      - name: tendermint-pvc-1
-        persistentVolumeClaim:
-          claimName: tendermint-pvc-1
-      containers:
-      - name: ankrchain
-        image: ankrnetwork/ankr-chain:hub-feat
-        imagePullPolicy: Always
-        command:
-          [
-            "sh",
-            "-c",
-            "cp config/priv_validator_state.json data/  && mv config/node_key.1.json config/node_key.json && mv config/priv_validator_key.1.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
-          ]
-        ports:
-        - name: p2p-1
-          containerPort: 26656
-        - name: rpc
-          containerPort: 26657
-        - name: abci
-          containerPort: 26658
-        volumeMounts:
         - name: tendermint-pvc-1
-          mountPath: /ankrchain/data
+          persistentVolumeClaim:
+            claimName: tendermint-pvc-1
+      containers:
+        - name: ankrchain
+          image: ankrnetwork/ankr-chain:hub-feat
+          imagePullPolicy: Always
+          command:
+            [
+              "sh",
+              "-c",
+              "cp config/priv_validator_state.json data/  && mv config/node_key.1.json config/node_key.json && mv config/priv_validator_key.1.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
+            ]
+          ports:
+            - name: p2p-1
+              containerPort: 26656
+            - name: rpc
+              containerPort: 26657
+            - name: abci
+              containerPort: 26658
+          volumeMounts:
+            - name: tendermint-pvc-1
+              mountPath: /ankrchain/data
 
 ---
 apiVersion: apps/v1
@@ -65,31 +65,31 @@ spec:
         id: ankrchain-2
     spec:
       imagePullSecrets:
-      - name: aws-ecr
+        - name: aws-ecr
       volumes:
-      - name: tendermint-pvc-2
-        persistentVolumeClaim:
-          claimName: tendermint-pvc-2
-      containers:
-      - name: ankrchain
-        image: ankrnetwork/ankr-chain:hub-feat
-        imagePullPolicy: Always
-        command:
-          [
-            "sh",
-            "-c",
-            "cp config/priv_validator_state.json data/  && mv config/node_key.2.json config/node_key.json && mv config/priv_validator_key.2.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
-          ]
-        ports:
-        - name: p2p-2
-          containerPort: 26656
-        - name: rpc
-          containerPort: 26657
-        - name: abci
-          containerPort: 26658
-        volumeMounts:
         - name: tendermint-pvc-2
-          mountPath: /ankrchain/data
+          persistentVolumeClaim:
+            claimName: tendermint-pvc-2
+      containers:
+        - name: ankrchain
+          image: ankrnetwork/ankr-chain:hub-feat
+          imagePullPolicy: Always
+          command:
+            [
+              "sh",
+              "-c",
+              "cp config/priv_validator_state.json data/  && mv config/node_key.2.json config/node_key.json && mv config/priv_validator_key.2.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
+            ]
+          ports:
+            - name: p2p-2
+              containerPort: 26656
+            - name: rpc
+              containerPort: 26657
+            - name: abci
+              containerPort: 26658
+          volumeMounts:
+            - name: tendermint-pvc-2
+              mountPath: /ankrchain/data
 
 ---
 apiVersion: apps/v1
@@ -112,31 +112,31 @@ spec:
         id: ankrchain-3
     spec:
       imagePullSecrets:
-      - name: aws-ecr
+        - name: aws-ecr
       volumes:
-      - name: tendermint-pvc-3
-        persistentVolumeClaim:
-          claimName: tendermint-pvc-3
-      containers:
-      - name: ankrchain
-        image: ankrnetwork/ankr-chain:hub-feat
-        imagePullPolicy: Always
-        command:
-          [
-            "sh",
-            "-c",
-            "cp config/priv_validator_state.json data/  && mv config/node_key.3.json config/node_key.json && mv config/priv_validator_key.3.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
-          ]
-        ports:
-        - name: p2p-3
-          containerPort: 26656
-        - name: rpc
-          containerPort: 26657
-        - name: abci
-          containerPort: 26658
-        volumeMounts:
         - name: tendermint-pvc-3
-          mountPath: /ankrchain/data
+          persistentVolumeClaim:
+            claimName: tendermint-pvc-3
+      containers:
+        - name: ankrchain
+          image: ankrnetwork/ankr-chain:hub-feat
+          imagePullPolicy: Always
+          command:
+            [
+              "sh",
+              "-c",
+              "cp config/priv_validator_state.json data/  && mv config/node_key.3.json config/node_key.json && mv config/priv_validator_key.3.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
+            ]
+          ports:
+            - name: p2p-3
+              containerPort: 26656
+            - name: rpc
+              containerPort: 26657
+            - name: abci
+              containerPort: 26658
+          volumeMounts:
+            - name: tendermint-pvc-3
+              mountPath: /ankrchain/data
 
 ---
 apiVersion: apps/v1
@@ -159,28 +159,28 @@ spec:
         id: ankrchain-4
     spec:
       imagePullSecrets:
-      - name: aws-ecr
+        - name: aws-ecr
       volumes:
-      - name: tendermint-pvc-4
-        persistentVolumeClaim:
-          claimName: tendermint-pvc-4
-      containers:
-      - name: ankrchain
-        image: ankrnetwork/ankr-chain:hub-feat
-        imagePullPolicy: Always
-        command:
-          [
-            "sh",
-            "-c",
-            "cp config/priv_validator_state.json data/  && mv config/node_key.4.json config/node_key.json && mv config/priv_validator_key.4.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
-          ]
-        ports:
-        - name: p2p-4
-          containerPort: 26656
-        - name: rpc
-          containerPort: 26657
-        - name: abci
-          containerPort: 26658
-        volumeMounts:
         - name: tendermint-pvc-4
-          mountPath: /ankrchain/data
+          persistentVolumeClaim:
+            claimName: tendermint-pvc-4
+      containers:
+        - name: ankrchain
+          image: ankrnetwork/ankr-chain:hub-feat
+          imagePullPolicy: Always
+          command:
+            [
+              "sh",
+              "-c",
+              "cp config/priv_validator_state.json data/  && mv config/node_key.4.json config/node_key.json && mv config/priv_validator_key.4.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
+            ]
+          ports:
+            - name: p2p-4
+              containerPort: 26656
+            - name: rpc
+              containerPort: 26657
+            - name: abci
+              containerPort: 26658
+          volumeMounts:
+            - name: tendermint-pvc-4
+              mountPath: /ankrchain/data

@@ -758,7 +758,7 @@ func getCurrency(cmd *cobra.Command, args []string) {
 	req := new(common2.CurrencyQueryReq)
 	req.Symbol = viper.GetString(queryCurrencySymbol)
 	currencyResp := new(common2.CurrencyQueryResp)
-	err := client.Query("/store/nonce", req, currencyResp)
+	err := client.Query("/store/currency", req, currencyResp)
 	if err != nil {
 		fmt.Println(err)
 		return

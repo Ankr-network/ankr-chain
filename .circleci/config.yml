@@ -3,115 +3,118 @@ workflows:
   version: 2
   metering:
     jobs:
-    - build:
-        context: cicd
+      - build:
+          context: cicd
 jobs:
   build:
     docker:
-    - image: ankrnetwork/circleci
+      - image: ankrnetwork/circleci
     steps:
-    - checkout
-    - setup_remote_docker
-    - run:
-        name: "Login Docker Repositories"
-        command: |
-          docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_TOKEN
-          # eval $(aws ecr get-login --no-include-email --region us-west-2)
-    - run:
-        name: "Build & Push Docker Image, rollout on K8s and test"
-        command: |
-          set -x
-          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-          SHA1_SHORT=$(git rev-parse --short HEAD)
-          PRIV_PATH="config/priv_validator_key.json"
-          DATE=`date +%Y%m%d%H%M%S`
-          if [[ ($BRANCH_NAME == "master") ]]; then
-            BRANCH_NAME="stage"
-            K8S_CLUSTER="hub"
-            CHARTMUSEUM_URL="http://chart.dccn.ankr.com:8080"
-            AWS_ZONE=us-west-2a
-            ACM_REGION="us-west-2"
-            ANKRCHAIN_DNS="chain.dccn.ankr.com"
-          elif [[ ($BRANCH_NAME == "develop") ]]; then
-            BRANCH_NAME="dev"
-            K8S_CLUSTER="stage.hub"
-            CHARTMUSEUM_URL="http://chart-stage.dccn.ankr.com:8080"
-            ACM_REGION="us-west-1"
-            ANKRCHAIN_DNS="chain-stage.dccn.ankr.com"
-          else
-            BRANCH_NAME="feat"
-            K8S_CLUSTER="dev.hub"
-            CHARTMUSEUM_URL="http://chart-dev.dccn.ankr.com:8080"
-            ACM_REGION="us-west-1"
-            ANKRCHAIN_DNS="chain-dev.dccn.ankr.com"
-          fi
-          sed -i "s/seeds = \"\"/$SEEDS/"  DOCKER/tmhome/config/config.$BRANCH_NAME.toml
-          docker build --build-arg GITHUB_USER=${GITHUB_USER} --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
-            --label=ankrchain --target=public --build-arg BRANCH_NAME=${BRANCH_NAME} \
-            --build-arg PRIV_PATH=${PRIV_PATH} --build-arg BRANCH_NAME=${BRANCH_NAME} \
-            -t ankr-chain:$BRANCH_NAME . -f DOCKER/Dockerfile
-          for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
-            docker tag ankr-chain:$BRANCH_NAME ankrnetwork/ankr-chain:$TAG
-            docker push ankrnetwork/ankr-chain:$TAG
-          done
-          docker build --build-arg GITHUB_USER=${GITHUB_USER} --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
-            --label=ankrchain --target=hub --build-arg BRANCH_NAME=${BRANCH_NAME} \
-            --build-arg PRIV_PATH=${PRIV_PATH} -t ankr-chain:hub-$BRANCH_NAME \
-            . -f DOCKER/Dockerfile
-          for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
-            docker tag ankr-chain:hub-$BRANCH_NAME ankrnetwork/ankr-chain:hub-$TAG
-            docker push ankrnetwork/ankr-chain:hub-$TAG
-          done
-          # upgrade ankrchain in daemon side
-          CHARTS_JSON=$(curl -s $CHARTMUSEUM_URL/ankr/daemon/api/charts)
-          ANKRCHAIN_TGZ=$(echo -e ${CHARTS_JSON//\"/\\n} | grep charts/ankr-chain-)
-          mkdir chart_tmp && cd chart_tmp
-          TGZ_FILE=${ANKRCHAIN_TGZ//charts\/}
-          curl -SLf $CHARTMUSEUM_URL/ankr/daemon/charts/$TGZ_FILE | tar xz
-          DIR=$(ls)
-          sed -i~ -E "s/tag: .*/tag: $BRANCH_NAME$DATE/" $DIR/values.yaml
-          tar czf $TGZ_FILE $DIR
-          # TODO: support authenticate
-          curl --data-binary "@$TGZ_FILE" $CHARTMUSEUM_URL/ankr/daemon/api/charts
-          rm -rf $TGZ_FILE $DIR
-          cd ..
-          # change AWS ZONE
-          if [[ ! -z $AWS_ZONE ]]; then
-            sed -i~ -E "s/zone: .*/zone: $AWS_ZONE/" k8s/create-pvc.yaml
-          fi
-          # upgrade ankrchain in hub side
-          kops export kubecfg --name ${K8S_CLUSTER}.k8s.ankr.network --state s3://kops.${K8S_CLUSTER}.config
-          kubectl apply -f k8s/create-pvc.yaml
-          kubectl apply -f k8s/ankrchain-svc.yaml
-          if [[ ($BRANCH_NAME == "master") ]]; then
-            kubectl set image ankrchain=ankrnetwork/ankr-chain:$BRANCH_NAME$DATE \
-              -f k8s/ankrchain-prod.yaml --local -o yaml > k8s/ankrchain-patched.yaml
-          else
-            kubectl set image ankrchain=ankrnetwork/ankr-chain:hub-$BRANCH_NAME$DATE \
-              -f k8s/ankrchain.yaml --local -o yaml > k8s/ankrchain-patched.yaml
-          fi
-          # add page break line before new deployment, not compatible with bsd style command line tool, eg: macOS
-          # add colon to separate with json in annotation
-          sed -i '/apiVersion:/i---' k8s/ankrchain-patched.yaml
-          cat k8s/ankrchain-patched.yaml
-          kubectl apply -f k8s/ankrchain-patched.yaml
-          for i in 1 2 3 4; do
-            if ! kubectl rollout status statefulset/ankrchain-$i --watch=true --timeout=120s; then
-              echo "Deploy failed, roll back to previous version"
-              kubectl rollout undo statefulset/ankrchain-$i
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: "Login Docker Repositories"
+          command: |
+            docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_TOKEN
+            # eval $(aws ecr get-login --no-include-email --region us-west-2)
+      - run:
+          name: "Build & Push Docker Image, rollout on K8s and test"
+          command: |
+            set -x
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+            SHA1_SHORT=$(git rev-parse --short HEAD)
+            PRIV_PATH="config/priv_validator_key.json"
+            DATE=`date +%Y%m%d%H%M%S`
+            if [[ ($BRANCH_NAME == "master") ]]; then
+              BRANCH_NAME="stage"
+              K8S_CLUSTER="hub"
+              CHARTMUSEUM_URL="http://chart.dccn.ankr.com:8080"
+              AWS_ZONE=us-west-2a
+              ACM_REGION="us-west-2"
+              ANKRCHAIN_DNS="chain.dccn.ankr.com"
+            elif [[ ($BRANCH_NAME == "develop") ]]; then
+              BRANCH_NAME="dev"
+              K8S_CLUSTER="stage.hub"
+              CHARTMUSEUM_URL="http://chart-stage.dccn.ankr.com:8080"
+              ACM_REGION="us-west-1"
+              ANKRCHAIN_DNS="chain-stage.dccn.ankr.com"
+            else
+              BRANCH_NAME="feat"
+              K8S_CLUSTER="dev.hub"
+              CHARTMUSEUM_URL="http://chart-dev.dccn.ankr.com:8080"
+              ACM_REGION="us-west-1"
+              ANKRCHAIN_DNS="chain-dev.dccn.ankr.com"
             fi
-          done
-          kubectl get all
-          # update load balancer cert
-          sleep 60
-          ANKRCHAIN_SVC=$(kubectl get svc --no-headers=true ankr-chain|awk '{print $4}')
-          ANKRCHAIN_ELB=$(kubectl get svc --no-headers=true ankr-chain|awk '{print $4}'|cut -d'-' -f1)
-          ANKRCHAIN_ACM_ARN=$(aws acm list-certificates --region ${ACM_REGION} --query CertificateSummaryList[].[CertificateArn,DomainName] --output text | grep ${ANKRCHAIN_DNS} | cut -f1)
-          ANKRCHAIN_ELB_ARN=$(aws elbv2 describe-load-balancers --region $ACM_REGION --query LoadBalancers[].[LoadBalancerName,LoadBalancerArn] --output text|grep $ANKRCHAIN_ELB|cut -f2)
-          ANKRCHAIN_TLS_ARN=$(aws elbv2 describe-listeners --load-balancer-arn $ANKRCHAIN_ELB_ARN --region ${ACM_REGION} --query Listeners[].[ListenerArn,Port] --output text|awk '{if($2=='443'){print $1}}')
-          aws elbv2 modify-listener --region $ACM_REGION --listener-arn $ANKRCHAIN_TLS_ARN --protocol TLS --ssl-policy ELBSecurityPolicy-2016-08 --certificates CertificateArn=$ANKRCHAIN_ACM_ARN
-          # set route53
-          ELB_HOST_ZONE_ID=$(aws elbv2 describe-load-balancers --region $ACM_REGION --query LoadBalancers[].[CanonicalHostedZoneId,LoadBalancerArn] --output text | grep ${ANKRCHAIN_ELB} | cut -f1)
-          DNS_HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name | grep -B 1 -e "ankr.com" | sed 's/.*hostedzone\/\([A-Za-z0-9]*\)\".*/\1/' | head -n 1 )
-          INPUT_JSON_STR="{\"ChangeBatch\":{\"Comment\":\"Update\",\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"${ANKRCHAIN_DNS}\",\"Type\":\"A\",\"AliasTarget\":{\"HostedZoneId\":\"${ELB_HOST_ZONE_ID}\",\"DNSName\":\"${ANKRCHAIN_SVC}\",\"EvaluateTargetHealth\":true}}}]}}"
-          aws route53 change-resource-record-sets --hosted-zone-id ${DNS_HOSTED_ZONE_ID} --cli-input-json ${INPUT_JSON_STR}
+            sed -i "s/seeds = \"\"/$SEEDS/"  DOCKER/tmhome/config/config.$BRANCH_NAME.toml
+
+            docker build --build-arg GITHUB_USER=${GITHUB_USER} --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
+              --label=ankrchain --target=public --build-arg BRANCH_NAME=${BRANCH_NAME} \
+              --build-arg PRIV_PATH=${PRIV_PATH} --build-arg BRANCH_NAME=${BRANCH_NAME} \
+              -t ankr-chain:$BRANCH_NAME . -f DOCKER/Dockerfile
+            for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
+              docker tag ankr-chain:$BRANCH_NAME ankrnetwork/ankr-chain:$TAG
+              docker push ankrnetwork/ankr-chain:$TAG
+            done
+
+            docker build --build-arg GITHUB_USER=${GITHUB_USER} --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
+              --label=ankrchain --target=hub --build-arg BRANCH_NAME=${BRANCH_NAME} \
+              --build-arg PRIV_PATH=${PRIV_PATH} -t ankr-chain:hub-$BRANCH_NAME \
+              . -f DOCKER/Dockerfile
+            for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
+              docker tag ankr-chain:hub-$BRANCH_NAME ankrnetwork/ankr-chain:hub-$TAG
+              docker push ankrnetwork/ankr-chain:hub-$TAG
+            done
+
+            # upgrade ankrchain in daemon side
+            CHARTS_JSON=$(curl -s $CHARTMUSEUM_URL/ankr/daemon/api/charts)
+            ANKRCHAIN_TGZ=$(echo -e ${CHARTS_JSON//\"/\\n} | grep charts/ankr-chain-)
+            mkdir chart_tmp && cd chart_tmp
+            TGZ_FILE=${ANKRCHAIN_TGZ//charts\/}
+            curl -SLf $CHARTMUSEUM_URL/ankr/daemon/charts/$TGZ_FILE | tar xz
+            DIR=$(ls)
+            sed -i~ -E "s/tag: .*/tag: $BRANCH_NAME$DATE/" $DIR/values.yaml
+            tar czf $TGZ_FILE $DIR
+            # TODO: support authenticate
+            curl --data-binary "@$TGZ_FILE" $CHARTMUSEUM_URL/ankr/daemon/api/charts
+            rm -rf $TGZ_FILE $DIR
+            cd ..
+            # change AWS ZONE
+            if [[ ! -z $AWS_ZONE ]]; then
+              sed -i~ -E "s/zone: .*/zone: $AWS_ZONE/" k8s/create-pvc.yaml
+            fi
+            # upgrade ankrchain in hub side
+            kops export kubecfg --name ${K8S_CLUSTER}.k8s.ankr.network --state s3://kops.${K8S_CLUSTER}.config
+            kubectl apply -f k8s/create-pvc.yaml
+            kubectl apply -f k8s/ankrchain-svc.yaml
+            if [[ ($BRANCH_NAME == "master") ]]; then
+              kubectl set image ankrchain=ankrnetwork/ankr-chain:$BRANCH_NAME$DATE \
+                -f k8s/ankrchain-prod.yaml --local -o yaml > k8s/ankrchain-patched.yaml
+            else
+              kubectl set image ankrchain=ankrnetwork/ankr-chain:hub-$BRANCH_NAME$DATE \
+                -f k8s/ankrchain.yaml --local -o yaml > k8s/ankrchain-patched.yaml
+            fi
+            # add page break line before new deployment, not compatible with bsd style command line tool, eg: macOS
+            # add colon to separate with json in annotation
+            sed -i '/apiVersion:/i---' k8s/ankrchain-patched.yaml
+            cat k8s/ankrchain-patched.yaml
+            kubectl apply -f k8s/ankrchain-patched.yaml
+            for i in 1 2 3 4; do
+              if ! kubectl rollout status statefulset/ankrchain-$i --watch=true --timeout=120s; then
+                echo "Deploy failed, roll back to previous version"
+                kubectl rollout undo statefulset/ankrchain-$i
+              fi
+            done
+            kubectl get all
+            # update load balancer cert
+            sleep 60
+            ANKRCHAIN_SVC=$(kubectl get svc --no-headers=true ankr-chain|awk '{print $4}')
+            ANKRCHAIN_ELB=$(kubectl get svc --no-headers=true ankr-chain|awk '{print $4}'|cut -d'-' -f1)
+            ANKRCHAIN_ACM_ARN=$(aws acm list-certificates --region ${ACM_REGION} --query CertificateSummaryList[].[CertificateArn,DomainName] --output text | grep ${ANKRCHAIN_DNS} | cut -f1)
+            ANKRCHAIN_ELB_ARN=$(aws elbv2 describe-load-balancers --region $ACM_REGION --query LoadBalancers[].[LoadBalancerName,LoadBalancerArn] --output text|grep $ANKRCHAIN_ELB|cut -f2)
+            ANKRCHAIN_TLS_ARN=$(aws elbv2 describe-listeners --load-balancer-arn $ANKRCHAIN_ELB_ARN --region ${ACM_REGION} --query Listeners[].[ListenerArn,Port] --output text|awk '{if($2=='443'){print $1}}')
+            aws elbv2 modify-listener --region $ACM_REGION --listener-arn $ANKRCHAIN_TLS_ARN --protocol TLS --ssl-policy ELBSecurityPolicy-2016-08 --certificates CertificateArn=$ANKRCHAIN_ACM_ARN
+            # set route53
+            ELB_HOST_ZONE_ID=$(aws elbv2 describe-load-balancers --region $ACM_REGION --query LoadBalancers[].[CanonicalHostedZoneId,LoadBalancerArn] --output text | grep ${ANKRCHAIN_ELB} | cut -f1)
+            DNS_HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name | grep -B 1 -e "ankr.com" | sed 's/.*hostedzone\/\([A-Za-z0-9]*\)\".*/\1/' | head -n 1 )
+            INPUT_JSON_STR="{\"ChangeBatch\":{\"Comment\":\"Update\",\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"${ANKRCHAIN_DNS}\",\"Type\":\"A\",\"AliasTarget\":{\"HostedZoneId\":\"${ELB_HOST_ZONE_ID}\",\"DNSName\":\"${ANKRCHAIN_SVC}\",\"EvaluateTargetHealth\":true}}}]}}"
+            aws route53 change-resource-record-sets --hosted-zone-id ${DNS_HOSTED_ZONE_ID} --cli-input-json ${INPUT_JSON_STR}
