@@ -1,35 +1,22 @@
-# Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
+workflows:
+  version: 2
+  metering:
+    jobs:
+    - build:
+        context: cicd
 jobs:
   build:
     docker:
-    # Build in Python container to install AWS CLI
-    - image: circleci/python:2.7.15-stretch
-    working_directory: ~/app
+    - image: ankrnetwork/circleci
     steps:
     - checkout
     - setup_remote_docker
     - run:
-        name: copy ssh key
+        name: "Login Docker Repositories"
         command: |
-          cp ${HOME}/.ssh/id_rsa id_rsa
-    - run:
-        name: Install AWSCLI / kops / kubectl
-        command: |
-          curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-          unzip awscli-bundle.zip
-          sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-          wget -O kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
-          chmod +x ./kops
-          sudo mv ./kops /usr/local/bin/kops
-          curl -SLO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
-    - run:
-        name: "Log in to AWS ECR"
-        command: eval $(aws ecr get-login --no-include-email --region $AWS_REGION)
+          docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_TOKEN
+          # eval $(aws ecr get-login --no-include-email --region us-west-2)
     - run:
         name: "Build & Push Docker Image, rollout on K8s and test"
         command: |
@@ -59,15 +46,21 @@ jobs:
             ANKRCHAIN_DNS="chain-dev.dccn.ankr.com"
           fi
           sed -i "s/seeds = \"\"/$SEEDS/"  DOCKER/tmhome/config/config.$BRANCH_NAME.toml
-          docker build --label=ankrchain --target=public --build-arg BRANCH_NAME=${BRANCH_NAME} --build-arg PRIV_PATH=${PRIV_PATH} --build-arg BRANCH_NAME=${BRANCH_NAME} -t ankr-chain:$BRANCH_NAME . -f DOCKER/Dockerfile
+          docker build --build-arg GITHUB_USER=${GITHUB_USER} --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
+            --label=ankrchain --target=public --build-arg BRANCH_NAME=${BRANCH_NAME} \
+            --build-arg PRIV_PATH=${PRIV_PATH} --build-arg BRANCH_NAME=${BRANCH_NAME} \
+            -t ankr-chain:$BRANCH_NAME . -f DOCKER/Dockerfile
           for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
-            docker tag ankr-chain:$BRANCH_NAME $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/ankr-chain:$TAG
-            docker push $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/ankr-chain:$TAG
+            docker tag ankr-chain:$BRANCH_NAME ankrnetwork/ankr-chain:$TAG
+            docker push ankrnetwork/ankr-chain:$TAG
           done
-          docker build --label=ankrchain --target=hub --build-arg BRANCH_NAME=${BRANCH_NAME} --build-arg PRIV_PATH=${PRIV_PATH} -t ankr-chain:hub-$BRANCH_NAME . -f DOCKER/Dockerfile
+          docker build --build-arg GITHUB_USER=${GITHUB_USER} --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} \
+            --label=ankrchain --target=hub --build-arg BRANCH_NAME=${BRANCH_NAME} \
+            --build-arg PRIV_PATH=${PRIV_PATH} -t ankr-chain:hub-$BRANCH_NAME \
+            . -f DOCKER/Dockerfile
           for TAG in $BRANCH_NAME $SHA1_SHORT $BRANCH_NAME$DATE; do
-            docker tag ankr-chain:hub-$BRANCH_NAME $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/ankr-chain:hub-$TAG
-            docker push $AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/ankr-chain:hub-$TAG
+            docker tag ankr-chain:hub-$BRANCH_NAME ankrnetwork/ankr-chain:hub-$TAG
+            docker push ankrnetwork/ankr-chain:hub-$TAG
           done
           # upgrade ankrchain in daemon side
           CHARTS_JSON=$(curl -s $CHARTMUSEUM_URL/ankr/daemon/api/charts)
@@ -90,11 +83,11 @@ jobs:
           kops export kubecfg --name ${K8S_CLUSTER}.k8s.ankr.network --state s3://kops.${K8S_CLUSTER}.config
           kubectl apply -f k8s/create-pvc.yaml
           kubectl apply -f k8s/ankrchain-svc.yaml
-          if [[ ($BRANCH_NAME == "stage") ]]; then
-            kubectl set image ankrchain=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/ankr-chain:$BRANCH_NAME$DATE \
+          if [[ ($BRANCH_NAME == "master") ]]; then
+            kubectl set image ankrchain=ankrnetwork/ankr-chain:$BRANCH_NAME$DATE \
               -f k8s/ankrchain-prod.yaml --local -o yaml > k8s/ankrchain-patched.yaml
           else
-            kubectl set image ankrchain=$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com/ankr-chain:hub-$BRANCH_NAME$DATE \
+            kubectl set image ankrchain=ankrnetwork/ankr-chain:hub-$BRANCH_NAME$DATE \
               -f k8s/ankrchain.yaml --local -o yaml > k8s/ankrchain-patched.yaml
           fi
           # add page break line before new deployment, not compatible with bsd style command line tool, eg: macOS
