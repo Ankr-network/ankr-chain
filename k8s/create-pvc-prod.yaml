@@ -6,7 +6,7 @@ provisioner: kubernetes.io/aws-ebs
 allowVolumeExpansion: true
 parameters:
   type: gp2
-  zone: us-west-1a
+  zone: us-west-2a
 reclaimPolicy: Delete
 ---
 kind: PersistentVolumeClaim
