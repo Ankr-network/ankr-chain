@@ -1,25 +1,32 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ankrchain-2
+  name: ankrchain-3
 spec:
   selector:
     matchLabels:
-      app: ankr-chain
-      id: ankrchain-2
+      app: ankrchain-3
+      id: ankrchain-3
   replicas: 1
-  serviceName: ankrchain-2
+  serviceName: ankrchain-3
   template:
     metadata:
       labels:
-        app: ankr-chain
-        id: ankrchain-2
+        app: ankrchain-3
+        id: ankrchain-3
     spec:
+      volumes:
+        - name: ankrchain-3
+          persistentVolumeClaim:
+            claimName: csi-pvc-ankrchain-1-3
       containers:
-        - name: ankrchain
+        - name: ankrchain-3
           image: ankrnetwork/ankr-chain:dev
           command: ["sh", "-c", "ankrchain init && ankrchain start --moniker=`hostname`"]
           imagePullPolicy: Always
           ports:
             - name: rpc
               containerPort: 26657
+          volumeMounts:
+            - name: ankrchain-3
+              mountPath: /ankrchain/data

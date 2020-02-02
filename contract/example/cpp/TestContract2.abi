@@ -1,0 +1,56 @@
+[
+	{
+		"name": "init",
+		"inputs": [],
+		"outputs": {
+			"type": "string"
+		},
+		"type": [
+			"action"
+		]
+	},
+	{
+		"name": "testFunc",
+		"inputs": [
+			{
+				"name": "testStr",
+				"type": "string"
+			}
+		],
+		"outputs": {
+			"type": "void"
+		},
+		"type": [
+			"action",
+			"event"
+		]
+	},
+	{
+		"name": "testFuncWithInt",
+		"inputs": [
+			{
+				"name": "testStr",
+				"type": "string"
+			}
+		],
+		"outputs": {
+			"type": "int"
+		},
+		"type": [
+			"action"
+		]
+	},
+	{
+		"name": "testFuncWithString",
+		"inputs": [
+			{
+				"name": "testStr",
+				"type": "string"
+			}
+		],
+		"outputs": {
+			"type": "string"
+		},
+		"type": []
+	}
+]
