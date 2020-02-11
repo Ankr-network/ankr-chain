@@ -33,6 +33,10 @@ spec:
               "-c",
               "cp config/priv_validator_state.json data/  && mv config/node_key.1.json config/node_key.json && mv config/priv_validator_key.1.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
             ]
+          resources:
+            limits:
+              memory: "2000Mi"
+              cpu: "1000m"
           ports:
             - name: p2p-1
               containerPort: 26656
@@ -80,6 +84,10 @@ spec:
               "-c",
               "cp config/priv_validator_state.json data/  && mv config/node_key.2.json config/node_key.json && mv config/priv_validator_key.2.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
             ]
+          resources:
+            limits:
+              memory: "2000Mi"
+              cpu: "1000m"
           ports:
             - name: p2p-2
               containerPort: 26656
@@ -127,6 +135,10 @@ spec:
               "-c",
               "cp config/priv_validator_state.json data/  && mv config/node_key.3.json config/node_key.json && mv config/priv_validator_key.3.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
             ]
+          resources:
+            limits:
+              memory: "2000Mi"
+              cpu: "1000m"
           ports:
             - name: p2p-3
               containerPort: 26656
@@ -174,6 +186,10 @@ spec:
               "-c",
               "cp config/priv_validator_state.json data/  && mv config/node_key.4.json config/node_key.json && mv config/priv_validator_key.4.json config/priv_validator_key.json && ankrchain start --log_level=debug --moniker=`hostname`",
             ]
+          resources:
+            limits:
+              memory: "2000Mi"
+              cpu: "1000m"
           ports:
             - name: p2p-4
               containerPort: 26656
