@@ -94,3 +94,14 @@ type StatisticalInfoResp struct {
 	Addrs      []string  `json:"addrs"`
     TotalTx    int64     `json:"totaltx"`
 }
+
+type RoleQueryReq struct {
+	Name string  `json:"name"`
+}
+
+type RoleQueryResp struct {
+	Name         string    `json:"name"`
+	RType        RoleType `json:"roletype"`
+	PubKey       string   `json:"pubkey"`
+	ContractAddr string   `json:"contractaddr"`
+}

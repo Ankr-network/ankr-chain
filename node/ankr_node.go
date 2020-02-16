@@ -52,6 +52,8 @@ func NewAnkrNode(config *ankrconfig.AnkrConfig, logger tmcorelog.Logger) (*AnkrN
 
 	config.FilterPeers = config.AllowedPeers != ""
 
+	config.P2P.AddrBookStrict = false
+
 	tmNode, err :=  tmcorenode.NewNode(config.TendermintCoreConfig(),
 		privval.LoadOrGenFilePV(newPrivValKey, newPrivValState),
 		nodeKey,

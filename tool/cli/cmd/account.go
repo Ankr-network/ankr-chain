@@ -170,7 +170,7 @@ func addGenkeystoreFlags(cmd *cobra.Command) {
 	if err != nil {
 		panic(err)
 	}
-	err = addStringFlag(cmd, genkeyName, keyName, "", "", "keystore alias name.", required)
+	err = addStringFlag(cmd, genkeyName, nameParam, "", "", "keystore alias name.", required)
 	if err != nil {
 		panic(err)
 	}

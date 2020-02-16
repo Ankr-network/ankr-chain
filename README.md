@@ -40,7 +40,7 @@
      
   7. Transfer some ANKR coins from testing account to "B7665C86D4566627F3D9A2CF7E4518156ED139D80D216C": 
   
-      ./ankrchain-cli transaction  transfer --chain-id "test-chain-Hk17dM" --gas-limit 2000 --gas-price "100000000000000000" --nodeurl "localhost:26657" --amount 6 ANKR --to "B7665C86D4566627F3D9A2CF7E4518156ED139D80D216C" --keystore  <key store file>
+      ./ankrchain-cli transaction  transfer --chain-id "test-chain-Hk17dM" --gas-limit 2000 --gas-price "10000000000000" --nodeurl "localhost:26657" --amount 6 ANKR --to "B7665C86D4566627F3D9A2CF7E4518156ED139D80D216C" --keystore  <key store file>
   
   You can also try ankr chain smart contracts by the following step:
   
@@ -50,10 +50,10 @@
   
 2. Deploy the example contracts by ankr-chain-cli under the subdirectory "build/tool": 
 
-   ./ankrchain-cli transaction deploy --chain-id "test-chain-Hk17dM" --gas-limit 2000 --gas-price "100000000000000000" --nodeurl "localhost:26657" --file "../../contract/example/cpp/TestContract2.wasm" --name "TestContract2" --keystore  --abi ""
+   ./ankrchain-cli transaction deploy --chain-id "test-chain-Hk17dM" --gas-limit 2000 --gas-price "10000000000000" --nodeurl "localhost:26657" --file "../../contract/example/cpp/TestContract2.wasm" --name "TestContract2" --keystore  --abi ""
    
 3. Invoke the example contracts by ankr-chain-cli under the subdirectory "build/tool":
 
-   ./ankrchain-cli transaction  invoke --method "testFuncWithString" --args "[{\"index\":1,\"Name\":\"args\",\"ParamType\":\"string\",\"Value\":\"testFuncWithInt arg\"}]" --rtn-type "string" --chain-id "test-chain-Hk17dM" --gas-limit 2000 --gas-price "100000000000000000" --nodeurl "localhost:26657" ---keystore  <key store file> --address "BFB8206804DC410AAFB8828ABDD36B488DCFB7FA8EF984"
+   ./ankrchain-cli transaction  invoke --method "testFuncWithString" --args "[{\"index\":1,\"Name\":\"args\",\"ParamType\":\"string\",\"Value\":\"testFuncWithInt arg\"}]" --rtn-type "string" --chain-id "test-chain-Hk17dM" --gas-limit 2000 --gas-price "10000000000000" --nodeurl "localhost:26657" ---keystore  <key store file> --address "BFB8206804DC410AAFB8828ABDD36B488DCFB7FA8EF984"
   
   more detailed instruction, you can refer to the related document.

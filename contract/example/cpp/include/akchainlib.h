@@ -15,6 +15,25 @@ typedef void* JsonRoot;
 
 #define EXPORT __attribute__((used))
 
+#define AssertWithReturnBool(var, errStr) \
+    if (var == nullptr || var == "") { \
+        print_s(errStr); \
+        return false; \
+    }
+
+#define AssertWithReturnInt(var, errStr) \
+    if (var == nullptr || var == "") { \
+        print_s(errStr); \
+        return -1; \
+    }
+
+#define AssertWithReturnString(var, errStr) \
+    if (var == nullptr || var == "") { \
+        print_s(errStr); \
+        return ""; \
+    }
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -37,13 +56,20 @@ void JsonPutString(int jsonObjectIndex, const char* key, const char* value);
 char *JsonToString(int jsonObjectIndex);
 int TrigEvent(const char* eventSrc, const char* data);
 char *SenderAddr();
+char *OwnerAddr();
+int ChangeContractOwner(const char* cAddr, const char* ownerAddr);
 int SetBalance(const char* addr, const char* symbol, const char* amount);
 char* Balance(const char* addr, const char* symbol);
 int SetAllowance(const char* addrSender, const char* addrSpender, const char* symbol, const char* amount);
 char* Allowance(const char* addrSender, const char* addrSpender, const char* symbol);
 char* ContractAddr();
 int CreateCurrency(const char* symbol, int decimals, const char* totalSupply);
+bool IsContractNormal(const char *cAddr);
+int  SuspendContract(const char *cAddr);
+int  UnsuspendContract(const char *cAddr);
 int BuildCurrencyCAddrMap(const char* symbol, const char* cAddr);
+int StoreJsonObject(const char *cAddr, const char *key, const char *jsonObject);
+int LoadJsonObject(const char *cAddr, const char *key);
 int Height();
 
 #ifdef __cplusplus

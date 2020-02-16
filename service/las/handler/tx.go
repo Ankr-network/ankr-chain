@@ -29,9 +29,20 @@ func TxTransferHandler(c *client.Client) http.HandlerFunc {
 			return
 		}
 
+		if transferInfo.Header.GasPrice.Symbol != "ANKR" {
+			WriteErrorResponse(resp, http.StatusBadRequest, "gas should be ANKR coin")
+			return
+		}
+
 		gasPriceBigValWithDecimal, err := convertToDevimalValFromFloat64str(transferInfo.Header.GasPrice.Value)
 		if err != nil {
 			WriteErrorResponse(resp, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		minGasPrice, _ := new(big.Int).SetString("10000000000000", 10)
+		if gasPriceBigValWithDecimal.Cmp(minGasPrice) == -1 {
+			WriteErrorResponse(resp, http.StatusBadRequest, "gas price should be greater than 0.1 ANKR")
 			return
 		}
 

@@ -13,14 +13,17 @@ const (
 	IavlStoreAccountKey  = "ANKRCHAINACCOUNT"
 	IAvlStoreMainKey     = "ANKRCHAINMAIN"
 	IAvlStoreContractKey = "ANKRCHAINCONTRACT"
+	IavlStorePermKey     = "ANKRCHAINPERM"
 
 	IavlStoreAccountDefCacheSize  = 10000
 	IAvlStoreTxDefCacheSize       = 10000
 	IAvlStoreContractDefCacheSize = 10000
+	IAvlStorePermDefCacheSize     = 10000
 
 	IAVLStoreAccountKeepVersionNum  = 100
 	IAVLStoreMainKeepVersionNum     = 100
 	IAVLStoreContractKeepVersionNum = 100
+	IAVLStorePermKeepVersionNum     = 100
 
     CommitInfoKey     = "cminfo%d"
     LatestVerKey      = "latestverkey"
@@ -63,6 +66,9 @@ func NewIavlStoreMulti(db dbm.DB, storeLog log.Logger) *IavlStoreMulti {
 
 	dbMt := dbm.NewPrefixDB(db, []byte("ankr:"+IAvlStoreContractKey+"/"))
 	storeMap[IAvlStoreContractKey] = NewIavlStore(dbMt, IAvlStoreContractDefCacheSize, IAVLStoreContractKeepVersionNum, storeLog.With("module", "contractstore"))
+
+	dbR := dbm.NewPrefixDB(db, []byte("ankr:"+IavlStorePermKey+"/"))
+	storeMap[IavlStorePermKey] = NewIavlStore(dbR, IAvlStorePermDefCacheSize, IAVLStorePermKeepVersionNum, storeLog.With("module", "permstore"))
 
 	return &IavlStoreMulti{db, storeMap, storeLog, amino.NewCodec()}
 }

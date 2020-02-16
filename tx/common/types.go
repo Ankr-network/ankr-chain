@@ -10,4 +10,6 @@ const (
 	TxMsgTypeKeyMsg             = "KeyMsg"
 	TxMsgTypeContractDeployMsg  = "ContractDeployMsg"
 	TxMsgTypeContractInvokeMsg  = "ContractInvokeMsg"
+	TxMsgTypeAddRole            = "AddRole"
+	TxMsgTypeDeleteRole         = "DeleteRole"
 )

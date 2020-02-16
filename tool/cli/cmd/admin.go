@@ -68,7 +68,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	err = addPersistentString(adminCmd, adminGasPrice, gasPriceParam, "", "100000000000000000", "gas price", notRequired)
+	err = addPersistentString(adminCmd, adminGasPrice, gasPriceParam, "", "10000000000000", "gas price", notRequired)
 	if err != nil {
 		panic(err)
 	}

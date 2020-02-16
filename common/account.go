@@ -13,7 +13,7 @@ type Currency struct {
 
 type Amount struct {
 	Cur   Currency `json:"currency"`
-	Value []byte  `json:"value"`
+	Value []byte   `json:"value"`
 }
 
 type AccountType int
@@ -35,6 +35,7 @@ type AccountInfo struct {
 	Address  string      `json:"address"`
 	PubKey   string      `json:"pubkey"`
 	Amounts  []Amount    `json:"asserts"`
+	Roles   []string     `json:"roles"`
 }
 
 type AllowanceInfo struct {

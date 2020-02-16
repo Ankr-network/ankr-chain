@@ -11,7 +11,7 @@ import (
 var (
 	//funcRegexp = `(\[ \[ (ACTION|EVENT) \] \] ){0,2}(char|void) [\w]+ \(`
 	//used inside class definition
-	funcRegexp = `(\[ \[ (ACTION|EVENT|OWNERABLE) \] \] ){0,3}(char|void|int|float|bool) (\*\s)*[\w]+ \( (([\w]+|,|\*)\s)*\)` //add more
+	funcRegexp = `(\[ \[ (ACTION|EVENT|OWNERABLE|PAYABLE) \] \] ){0,4}(char|void|int|float|bool) (\*\s)*[\w]+ \( (([\w]+|,|\*)\s)*\)` //add more
 	pureFunc = `(char|void|int|float|bool) (\*\s)*[\w]+ \( (([\w]+|,|\*)\s)*\)`
 	inputRegexp = `\( (([\w]+|,|\*)\s)*\)`
 	exportRegexp = `extern(\s)*"(C|c)"(\s)*{(\s)*([^\{]*\{[^\}]*\})*(\s)*}`
@@ -227,6 +227,9 @@ func (m *Method)ParseFunction(foo string)  {
 	}
 	if strings.Contains(foo, "OWNERABLE"){
 		m.addType("ownerable")
+	}
+	if strings.Contains(foo, "PAYABLE"){
+		m.addType("payable")
 	}
 
 	reg, _ := regexp.Compile(pureFunc)

@@ -53,6 +53,20 @@ type ContractStore interface {
 	ContractAddrBySymbol(symbol string) (string, error)
 	SaveContract(cAddr string, cInfo *ankrcmm.ContractInfo) error
 	LoadContract(cAddr string, height int64, prove bool) (*ankrcmm.ContractInfo, string, *iavl.RangeProof, []byte, error)
+	IsContractNormal(cAddr string) bool
+	UpdateContractState(cAddr string, state ankrcmm.ContractState) error
+	ChangeContractOwner(cAddr string, ownerAddr string) error
+	AddContractRelatedObject(cAddr string, key string, jsonObject string) error
+	LoadContractRelatedObject(cAddr string, key string)(jsonObject string, err error)
+}
+
+type PermissionStore interface {
+	AddRole(rType ankrcmm.RoleType, name string, pubKey string, contractAddr string)
+	LoadRole(name string, height int64, prove bool) (*ankrcmm.RoleInfo, string, *iavl.RangeProof, []byte, error)
+	AddBoundAction(roleName string, contractAddr string, actionName string)
+	LoadBoundAction(contractAddr string, actionName string) ankrcmm.RoleBoundActionInfoList
+	AddBoundRole(address string, roleName string)
+	LoadBoundRoles(address string) ([]string, error)
 }
 
 type QueryHandler interface {
@@ -65,6 +79,7 @@ type AppStore interface {
 	QueryHandler
 	ContractStore
 	BCStore
+	PermissionStore
 	SetChainID(chainID string)
 	ChainID() string
 	APPHash() []byte

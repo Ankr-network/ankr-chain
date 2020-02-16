@@ -241,19 +241,35 @@ func searchClass(file string) (class []string) {
 	return
 }
 
+// read class definition and public functions
 func readClass(sc scanner.Scanner) []string {
 	var scope Scope
 	args := make([]string,0)
-	for !isOutScope(scope) {
+	for ; !isOutScope(scope); sc.Scan() {
 		switch sc.TokenText() {
 		case "{":
 			scope.entered = true
 			scope.subScope++
+			args = append(args, sc.TokenText())
 		case "}":
 			scope.subScope--
+			args = append(args, sc.TokenText())
+		case "public":
+			if scope.entered {
+				scope.publicScop = true
+			}
+		case "private", "protected":
+			if scope.entered {
+				scope.publicScop = false
+			}
 		}
-		args = append(args, sc.TokenText())
-		sc.Scan()
+		//only collect public functions
+		if !scope.entered{
+			args = append(args, sc.TokenText())
+		}
+		if isPublicScope(scope){
+			args = append(args, sc.TokenText())
+		}
 	}
 	return args
 }
@@ -261,6 +277,7 @@ func readClass(sc scanner.Scanner) []string {
 type Scope struct {
 	entered bool //mark if we entered a class scope
 	subScope int //sub scope counter
+	publicScop bool
 }
 
 func isOutScope(s Scope) bool {
@@ -268,4 +285,8 @@ func isOutScope(s Scope) bool {
 		return true
 	}
 	return false
+}
+
+func isPublicScope(s Scope) bool  {
+	return s.entered && s.publicScop
 }

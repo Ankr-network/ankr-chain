@@ -40,4 +40,11 @@ const (
 	CodeTypeCheckTxError             uint32 = 32
 	CodeTypeDeliverTxError           uint32 = 33
 	CodeTypeMismatchTxVersion        uint32 = 34
+	CodeTypeRoleNameInvalid          uint32 = 35
+	CodeTypeRoleContractAddrBlank    uint32 = 36
+	CodeTypeRoleInvalidAccount       uint32 = 37
+	CodeTypeRoleUnSupportedType      uint32 = 38
+	CodeTypeRoleExisted              uint32 = 39
+	CodeTypeRoleNotExisted           uint32 = 40
+	CodeTypeRoleNotMismatch          uint32 = 41
 )

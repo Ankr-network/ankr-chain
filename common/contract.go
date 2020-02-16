@@ -31,6 +31,13 @@ const (
 	ContractPatternTypeUnknown = 0x03
 )
 
+type ContractState int
+const(
+	_ ContractState = iota
+	ContractNormal  = 0x01
+	ContractSuspend = 0x02
+)
+
 type Param struct {
 	Index     int          `json:"index"`
 	Name      string       `json:"name"`
@@ -58,12 +65,13 @@ type ContractResult struct {
 }
 
 type ContractInfo struct {
-	Addr      string   `json:"addr"`
-	Name      string   `json:"name"`
-	Owner     string   `json:"owneraddr"`
-	Codes     []byte   `json:"codes"`
-	CodesDesc string   `json:"codesdesc"`
-	//TxHashs   []string `json:"txhashs"`
+	Addr         string             `json:"addr"`
+	Name         string             `json:"name"`
+	Owner        string             `json:"owneraddr"`
+	Codes        []byte             `json:"codes"`
+	CodesDesc    string             `json:"codesdesc"`
+	State        ContractState      `json:"state"`
+	RelatedInfos map[string]string  `json:"relatedinfos"`
 }
 
 func GenerateContractCodePrefix(cType ContractType, cVMType ContractVMType, cPatternType ContractPatternType) []byte {

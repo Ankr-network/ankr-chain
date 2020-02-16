@@ -3,6 +3,7 @@ package contract
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -17,12 +18,18 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
+type BlankSpeedGas struct { }
+
 type ContractInvokeMsg struct {
 	FromAddr     string  `json:"fromaddr"`
 	ContractAddr string  `json:"contractaddr"`
 	Method       string  `json:"name"`
 	Args         string  `json:"args"`
 	RtnType      string  `json:"rtnType"`
+}
+
+func (bs *BlankSpeedGas)SpendGas(gas *big.Int) bool {
+	return true
 }
 
 func (cd *ContractInvokeMsg) SignerAddr() []string {
@@ -74,12 +81,21 @@ func (ci *ContractInvokeMsg) ProcessTx(context tx.ContextTx, metric gas.GasMetri
 		return code.CodeTypeOK, "", nil
 	}
 
+
 	var params []*ankrcmm.Param
 	json.Unmarshal([]byte(ci.Args), &params)
 
+	metricInjected := metric
+
+	abi := ankrcmm.NewABIUtil(cInfo.CodesDesc)
+	isAction := abi.IsAction(ci.Method)
+	if !isAction {
+		metricInjected = new(BlankSpeedGas)
+	}
+
 	contractType    := ankrcmm.ContractType(cInfo.Codes[0])
 	contractPatt    := ankrcmm.ContractPatternType(cInfo.Codes[2])
-	contractContext := ankrcontext.NewContextContract(context.AppStore(), metric, ci, cInfo, context.AppStore(), context.Publisher())
+	contractContext := ankrcontext.NewContextContract(context.AppStore(), metricInjected, ci, cInfo, context.AppStore(), context.AppStore(), context.Publisher())
 	rtn, err := context.Contract().Call(contractContext, context.AppStore(), contractType, contractPatt, cInfo.Codes[ankrcmm.CodePrefixLen:], cInfo.Name, ci.Method, params, ci.RtnType)
 	if err != nil {
 		return code.CodeTypeCallContractErr, fmt.Sprintf("call contract err: contract=%s, method=%s, err=%v", ci.ContractAddr, ci.Method, err), nil
@@ -100,6 +116,7 @@ func (ci *ContractInvokeMsg) ProcessTx(context tx.ContextTx, metric gas.GasMetri
 		{Key: []byte("app.fromaddress"), Value: []byte(ci.FromAddr)},
 		{Key: []byte("app.contractaddr"), Value: []byte(ci.ContractAddr)},
 		{Key: []byte("app.method"), Value: []byte(ci.Method)},
+		{Key: []byte("app.args"), Value: []byte(ci.Args)},
 		{Key: []byte("app.timestamp"), Value: []byte(strconv.FormatInt(tvalue, 10))},
 		{Key: []byte("app.type"), Value: []byte(txcmm.TxMsgTypeContractInvokeMsg)},
 	}

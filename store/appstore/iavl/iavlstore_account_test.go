@@ -37,7 +37,7 @@ func TestBalance(t *testing.T) {
 	var accInfo1 ankrcmm.AccountInfo
 	accInfo1.Nonce = 1
 	accInfo1.Address = "5AEBA6EB8BC51DA277CCF1EF229F0C05D9535FA36CC872"
-	accInfo1.PubKey = "430EF1CCC9C24958779C84E6EDE748F8B743E60475D5098837B8A4971C3468FA"
+	accInfo1.PubKey  = "430EF1CCC9C24958779C84E6EDE748F8B743E60475D5098837B8A4971C3468FA"
 	accInfo1.Amounts = []ankrcmm.Amount{{ankrcmm.Currency{Symbol: "ANKR", Decimal: 18}, new(big.Int).SetUint64(100).Bytes()}}
 
 	storeApp.addAccountInfo(&accInfo1)

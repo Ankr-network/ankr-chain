@@ -2,6 +2,7 @@ package integration
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"sync"
@@ -42,26 +43,31 @@ Yr3093CQHQ5X+BVVAjsLZCSy5melIcgPLg==
 -----END EC PRIVATE KEY-----`
 
 func TestTxTransferWithNode(t *testing.T) {
-	c := client.NewClient("localhost:26657")
+	c := client.NewClient("http://127.0.0.1:26657")
 
 	msgHeader := client.TxMsgHeader{
-		ChID: "test-chain-FRIERy",
-		GasLimit: new(big.Int).SetUint64(20000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		ChID: "test-chain-q3443D",
+		GasLimit: new(big.Int).SetUint64(20000000).Bytes(),
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test transfer",
-		Version: "",
+		Version: "1.0.2",
 	}
+
+	resp := &ankrcmm.BalanceQueryResp{}
+	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4", "ANKR"}, resp)
+
+	t.Logf("addr=262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4, bal=%s", resp.Amount)
 
 	amount, _ := new(big.Int).SetString("6000000000000000000", 10)
 
-	tfMsg := &token.TransferMsg{FromAddr: "B150DF65F0179C218DFE34E8E450331A8450661D60FCA9",
-		ToAddr:  "C053853FA561AFDC33CF3CC5CB97D655121A99B4982F72",
+	tfMsg := &token.TransferMsg{FromAddr: "262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4",
+		ToAddr:  "EBB7C6C2F33588B12BEB4413B8A1798038F62775A53213",
 		Amounts: []ankrcmm.Amount{ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, amount.Bytes()}},
 	}
 
 	txSerializer := serializer.NewTxSerializerCDC()
 
-	key := crypto.NewSecretKeyEd25519("WawC9+JxxZW5Re731mvYodryGDWk3nQvlu6rN4j+0Vvs04Ms+dGzEPbu145bl0lqoocqep7tZvorggxnXR0oYA==")
+	key := crypto.NewSecretKeyEd25519("SS+zGFGEy4D7LxWHcDyAR19OOIGeP4JejwEdbJF23cg58gx4HT7C2h6PWkUbP6gaQI2v6HFK1mLWvOHG0X3jXA==")
 
 	builder := client.NewTxMsgBuilder(msgHeader, tfMsg,  txSerializer, key)
 
@@ -71,15 +77,15 @@ func TestTxTransferWithNode(t *testing.T) {
 
 	t.Logf("TestTxTransferWithNode sucessful: txHash=%s, cHeight=%d", txHash, cHeight)
 
-	resp := &ankrcmm.BalanceQueryResp{}
-	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"C053853FA561AFDC33CF3CC5CB97D655121A99B4982F72", "ANKR"}, resp)
+	resp = &ankrcmm.BalanceQueryResp{}
+	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4", "ANKR"}, resp)
 
-	t.Logf("addr=C053853FA561AFDC33CF3CC5CB97D655121A99B4982F72, bal=%s", resp.Amount)
+	t.Logf("addr=262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4, bal=%s", resp.Amount)
 
 	resp = &ankrcmm.BalanceQueryResp{}
-	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"B150DF65F0179C218DFE34E8E450331A8450661D60FCA9", "ANKR"}, resp)
+	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"EBB7C6C2F33588B12BEB4413B8A1798038F62775A53213", "ANKR"}, resp)
 
-	t.Logf("addr=B150DF65F0179C218DFE34E8E450331A8450661D60FCA9, bal=%s", resp.Amount)
+	t.Logf("addr=EBB7C6C2F33588B12BEB4413B8A1798038F62775A53213, bal=%s", resp.Amount)
 }
 
 func TestBroadcastTxAsyncWithNode(t *testing.T) {
@@ -88,7 +94,7 @@ func TestBroadcastTxAsyncWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-tPbTdZ",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "TestBroadcastTxAsync",
 		Version: "1.0.2",
 	}
@@ -117,7 +123,7 @@ func TestBroadcastTxAsyncParallelWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-NoqWuO",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "TestBroadcastTxAsync",
 		Version: "1.0.2",
 	}
@@ -151,7 +157,7 @@ func TestBroadcastTxSyncWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-NoqWuO",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "TestBroadcastTxSyncWithNode",
 		Version: "1.0.2",
 	}
@@ -180,7 +186,7 @@ func TestBroadcastTxSyncParallelWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-NoqWuO",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "TestBroadcastTxSyncParallelWithNode",
 		Version: "1.0.2",
 	}
@@ -214,7 +220,7 @@ func TestCertMsgWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "Ankr-dev-chain",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test CertMsg",
 		Version: "1.0.2",
 	}
@@ -254,7 +260,7 @@ func TestMeteringWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-50L9ea",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test metering",
 		Version: "1.0.2",
 	}
@@ -294,27 +300,32 @@ func TestContractDeployWithNode(t *testing.T) {
 	c := client.NewClient("localhost:26657")
 
 	msgHeader := client.TxMsgHeader{
-		ChID: "test-chain-dltzyF",
+		ChID: "test-chain-q3443D",
 		GasLimit: new(big.Int).SetUint64(10000000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test ContractDeploy",
 		Version: "1.0.2",
 	}
 
-	rawBytes, err := ioutil.ReadFile("F:/GoPath/src/github.com/Ankr-network/ankr-chain/contract/example/cpp/TestContract.wasm")
+	respAcc := &ankrcmm.BalanceQueryResp{}
+	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4", "ANKR"}, respAcc)
+
+	t.Logf("addr=262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4, bal=%s", respAcc.Amount)
+
+	rawBytes, err := ioutil.ReadFile("F:/GoPath/src/github.com/Ankr-network/ankr-chain/contract/example/cpp/ResourceEscrow.wasm")
 	if err != nil {
 		t.Errorf("can't read wasm file: %s", err.Error())
 	}
 
-	cdMsg := &contract.ContractDeployMsg{FromAddr: "B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67",
-		Name:     "TestContract",
+	cdMsg := &contract.ContractDeployMsg{FromAddr: "262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4",
+		Name:     "ResourceEscrow",
 		Codes:     rawBytes,
-		CodesDesc: "",
+		CodesDesc: "1.0.2",
 	}
 
 	txSerializer := serializer.NewTxSerializerCDC()
 
-	key := crypto.NewSecretKeyEd25519("wmyZZoMedWlsPUDVCOy+TiVcrIBPcn3WJN8k5cPQgIvC8cbcR10FtdAdzIlqXQJL9hBw1i0RsVjF6Oep/06Ezg==")
+	key := crypto.NewSecretKeyEd25519("SS+zGFGEy4D7LxWHcDyAR19OOIGeP4JejwEdbJF23cg58gx4HT7C2h6PWkUbP6gaQI2v6HFK1mLWvOHG0X3jXA==")
 
 	builder := client.NewTxMsgBuilder(msgHeader, cdMsg,  txSerializer, key)
 
@@ -327,7 +338,12 @@ func TestContractDeployWithNode(t *testing.T) {
 	resp := &ankrcmm.ContractQueryResp{}
 	c.Query("/store/contract", &ankrcmm.ContractQueryReq{contractAddr}, resp)
 
-	t.Logf("conract=%v", resp)
+	//t.Logf("conract=%v", resp)
+
+	respAcc = &ankrcmm.BalanceQueryResp{}
+	c.Query("/store/balance", &ankrcmm.BalanceQueryReq{"262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4", "ANKR"}, respAcc)
+
+	t.Logf("addr=262EBFC6A2FF5DD58C93A01B87D27C98FEC955D1488BC4, bal=%s", respAcc.Amount)
 }
 
 func TestContractInvokeWithNode(t *testing.T) {
@@ -336,7 +352,7 @@ func TestContractInvokeWithNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-dltzyF",
 		GasLimit: new(big.Int).SetUint64(10000000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test ContractInvoke",
 		Version: "1.0.2",
 	}
@@ -371,21 +387,23 @@ func TestContractDeployWithNodePattern1(t *testing.T) {
 	c := client.NewClient("localhost:26657")
 
 	msgHeader := client.TxMsgHeader{
-		ChID: "test-chain-dltzyF",
+		ChID: "test-chain-q3443D",
 		GasLimit: new(big.Int).SetUint64(10000000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test ContractDeploy",
 		Version: "1.0.2",
 	}
 
 	//rawBytes, err := ioutil.ReadFile("F:/GoPath/src/github.com/Ankr-network/ankr-chain/contract/example/cpp/TestContract2.wasm")
-	rawBytes, err := ioutil.ReadFile("F:/GoPath/src/github.com/Ankr-network/ankr-chain/contract/example/cpp/TestContract2.wasm")
+	rawBytes, err := ioutil.ReadFile("F:/GoPath/src/github.com/Ankr-network/ankr-chain/contract/example/cpp/ResourceEscrow.wasm")
 	if err != nil {
 		t.Errorf("can't read wasm file: %s", err.Error())
 	}
 
+	fmt.Printf("rawBytes=%v\n", rawBytes)
+
 	cdMsg := &contract.ContractDeployMsg{FromAddr: "B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67",
-		Name:     "TestContract",
+		Name:     "ResourceEscrow",
 		Codes:     rawBytes,
 		CodesDesc: "",
 	}
@@ -414,7 +432,7 @@ func TestContractInvokeWithNodePattern1(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-dltzyF",
 		GasLimit: new(big.Int).SetUint64(10000000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test ContractInvoke",
 		Version: "1.0.2",
 	}
@@ -448,10 +466,10 @@ func TestContractInvokeWithNodePattern1(t *testing.T) {
 }
 
 func TestQueryAccountInfoWithNode(t *testing.T) {
-	c := client.NewClient("localhost:26657")
+	c := client.NewClient("http://localhost:26657")
 
 	resp := &ankrcmm.AccountQueryResp{}
-	c.Query("/store/account", &ankrcmm.AccountQueryReq{"5AEBA6EB8BC51DA277CCF1EF229F0C05D9535FA36CC872"}, resp)
+	c.Query("/store/account", &ankrcmm.AccountQueryReq{"3DBB47451857FEFB1D1E4486E3050B3E76305518380EBE"}, resp)
 
 	t.Logf("account=%v", new(big.Int).SetBytes(resp.Amounts[0].Value).String())
 }

@@ -32,7 +32,7 @@ func NewModuleEnv() *ModuleEnv {
 	})
 
 	mEnv.RegisterImportedFunc(StrlenFunc, &wasm.Function{
-		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
 		Body: &wasm.FunctionBody{},
 		Host: reflect.ValueOf(Strlen),
 		Name: StrlenFunc,
@@ -164,6 +164,20 @@ func NewModuleEnv() *ModuleEnv {
 		Name: SenderAddrFunc,
 	})
 
+	mEnv.RegisterImportedFunc(OwnerAddrFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(OwnerAddr),
+		Name: OwnerAddrFunc,
+	})
+
+	mEnv.RegisterImportedFunc(ChangeContractOwnerFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32},ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(ChangeContractOwner),
+		Name: ChangeContractOwnerFunc,
+	})
+
 	mEnv.RegisterImportedFunc(SetBalanceFunc, &wasm.Function{
 		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32, wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
 		Body: &wasm.FunctionBody{},
@@ -218,6 +232,41 @@ func NewModuleEnv() *ModuleEnv {
 		Body: &wasm.FunctionBody{},
 		Host: reflect.ValueOf(Height),
 		Name: HeightFunc,
+	})
+
+	mEnv.RegisterImportedFunc(IsContractNormalFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(IsContractNormal),
+		Name: IsContractNormalFunc,
+	})
+
+	mEnv.RegisterImportedFunc(SuspendContractFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(SuspendContract),
+		Name: SuspendContractFunc,
+	})
+
+	mEnv.RegisterImportedFunc(UnsuspendContractFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(UnsuspendContract),
+		Name: UnsuspendContractFunc,
+	})
+
+	mEnv.RegisterImportedFunc(StoreJsonObjectFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32, wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(StoreJsonObject),
+		Name: StoreJsonObjectFunc,
+	})
+
+	mEnv.RegisterImportedFunc(LoadJsonObjectFunc, &wasm.Function{
+		Sig: &wasm.FunctionSig{ParamTypes: []wasm.ValueType{wasm.ValueTypeI32, wasm.ValueTypeI32}, ReturnTypes: []wasm.ValueType{wasm.ValueTypeI32}},
+		Body: &wasm.FunctionBody{},
+		Host: reflect.ValueOf(LoadJsonObject),
+		Name: LoadJsonObjectFunc,
 	})
 
 	return mEnv

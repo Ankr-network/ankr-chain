@@ -297,7 +297,7 @@ func (tx *TxMsg) DeliverTx(context ContextTx) (respDeliverTx types.ResponseDeliv
 	}
 
 	if tx.GasUsed == nil || tx.GasUsed.Cmp(big.NewInt(0)) == 0 {
-		return types.ResponseDeliverTx{Code: code.CodeTypeOK, GasWanted: 0, GasUsed: 0, Tags: tags}
+		return types.ResponseDeliverTx{Code: code.CodeTypeOK, Log: log, GasWanted: 0, GasUsed: 0, Tags: tags}
 	}
 
 	subGas := new(big.Int).Sub(tx.GasUsed, new(big.Int).SetBytes(tx.GasLimit))

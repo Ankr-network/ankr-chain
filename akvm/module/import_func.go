@@ -16,41 +16,49 @@ import (
 )
 
 const (
-	PrintSFunc                = "print_s"
-	PrintIFunc                = "print_i"
-	StrlenFunc                = "strlen"
-	StrcmpFunc                = "strcmp"
-	StrcatFunc                = "Strcat"
-	AtoiFunc                  = "Atoi"
-    ItoaFunc                  = "Itoa"
-	BigIntSubFunc             =  "BigIntSub"
-	BigIntAddFunc             =  "BigIntAdd"
-	BigIntCmpFunc             =  "BigIntCmp"
-	JsonObjectIndexFunc       = "JsonObjectIndex"
-	JsonCreateObjectFunc      = "JsonCreateObject"
-	JsonGetIntFunc            = "JsonGetInt"
-	JsonGetStringFunc         = "JsonGetString"
-	JsonPutIntFunc            = "JsonPutInt"
-	JsonPutStringFunc         = "JsonPutString"
-	JsonToStringFunc          = "JsonToString"
-	ContractCallFunc          = "ContractCall"
-	ContractDelegateCallFunc  = "ContractDelegateCall"
-	TrigEventFunc             = "TrigEvent"
-	SenderAddrFunc            = "SenderAddr"
-	SetBalanceFunc            = "SetBalance"
-	BalanceFunc               = "Balance"
-	SetAllowanceFunc          = "SetAllowance"
-	AllowanceFunc             = "Allowance"
-	CreateCurrencyFunc        = "CreateCurrency"
-	ContractAddrFunc          = "ContractAddr"
-	BuildCurrencyCAddrMapFunc = "BuildCurrencyCAddrMap"
-	HeightFunc                = "Height"
+	PrintSFunc                 = "print_s"
+	PrintIFunc                 = "print_i"
+	StrlenFunc                 = "strlen"
+	StrcmpFunc                 = "strcmp"
+	StrcatFunc                 = "strcat"
+	AtoiFunc                   = "Atoi"
+    ItoaFunc                   = "Itoa"
+	BigIntSubFunc              =  "BigIntSub"
+	BigIntAddFunc              =  "BigIntAdd"
+	BigIntCmpFunc              =  "BigIntCmp"
+	JsonObjectIndexFunc        = "JsonObjectIndex"
+	JsonCreateObjectFunc       = "JsonCreateObject"
+	JsonGetIntFunc             = "JsonGetInt"
+	JsonGetStringFunc          = "JsonGetString"
+	JsonPutIntFunc             = "JsonPutInt"
+	JsonPutStringFunc          = "JsonPutString"
+	JsonToStringFunc           = "JsonToString"
+	ContractCallFunc           = "ContractCall"
+	ContractDelegateCallFunc   = "ContractDelegateCall"
+	TrigEventFunc              = "TrigEvent"
+	SenderAddrFunc             = "SenderAddr"
+	OwnerAddrFunc              = "OwnerAddr"
+	ChangeContractOwnerFunc    = "ChangeContractOwner"
+	SetBalanceFunc             = "SetBalance"
+	BalanceFunc                = "Balance"
+	SetAllowanceFunc           = "SetAllowance"
+	AllowanceFunc              = "Allowance"
+	CreateCurrencyFunc         = "CreateCurrency"
+	ContractAddrFunc           = "ContractAddr"
+	BuildCurrencyCAddrMapFunc  = "BuildCurrencyCAddrMap"
+	HeightFunc                 = "Height"
+	IsContractNormalFunc       = "IsContractNormal"
+	SuspendContractFunc        = "SuspendContract"
+	UnsuspendContractFunc      = "UnsuspendContract"
+	StoreJsonObjectFunc        = "StoreJsonObject"
+	LoadJsonObjectFunc         = "LoadJsonObject"
 )
 
 func Print_s(proc *exec.Process, strIdx int32) {
 	str, err := proc.ReadString(int64(strIdx))
 	if err != nil {
 		proc.VM().Logger().Error("Print_s", "err", err)
+		return
 	}
 	proc.VM().Logger().Info("Print_s", "str", str)
 }
@@ -59,13 +67,13 @@ func Print_i(proc *exec.Process, v int32) {
 	proc.VM().Logger().Info("Print_i", "v", v)
 }
 
-func Strlen(proc *exec.Process, strIdx int32) int {
+func Strlen(proc *exec.Process, strIdx int32) int32 {
 	len, err := proc.VM().Strlen(uint(strIdx))
 	if err != nil {
 		return -1
 	}
 
-	return len
+	return int32(len)
 }
 
 func Strcmp(proc *exec.Process, strIdx1 int32, strIdx2 int32) int32 {
@@ -77,11 +85,13 @@ func Strcat(proc *exec.Process, strIdx1 int32, strIdx2 int32) uint64 {
 	str1, err := proc.ReadString(int64(strIdx1))
 	if err != nil {
 		proc.VM().Logger().Error("Strcat str1", "err", err)
+		return 0
 	}
 
 	str2, err := proc.ReadString(int64(strIdx2))
 	if err != nil {
 		proc.VM().Logger().Error("Strcat str2", "err", err)
+		return 0
 	}
 
 	str := str1 + str2
@@ -89,6 +99,7 @@ func Strcat(proc *exec.Process, strIdx1 int32, strIdx2 int32) uint64 {
 	pointer, err := proc.VM().SetBytes([]byte(str))
 	if err != nil {
 		proc.VM().Logger().Error("Strcat SetBytes", "err", err)
+		return 0
 	}
 
 	return pointer
@@ -98,11 +109,13 @@ func Atoi(proc *exec.Process, strIdx int32) int32 {
 	str, err := proc.ReadString(int64(strIdx))
 	if err != nil {
 		proc.VM().Logger().Error("Atoi", "err", err)
+		return -1
 	}
 
 	iRtn, err := strconv.Atoi(str)
 	if err != nil {
 		proc.VM().Logger().Error("Atoi convert error", "err", err)
+		return -1
 	}
 
 	return int32(iRtn)
@@ -114,6 +127,7 @@ func Itoa(proc *exec.Process, iValue int32) uint64 {
 	pointer, err := proc.VM().SetBytes([]byte(valStr))
 	if err != nil {
 		proc.VM().Logger().Error("ItoA SetBytes", "err", err)
+		return 0
 	}
 
 	return pointer
@@ -551,6 +565,38 @@ func SenderAddr(proc *exec.Process) uint64 {
 	return pointer
 }
 
+func OwnerAddr(proc *exec.Process) uint64 {
+	addr := ankrcontext.GetBCContext().OwnerAddr()
+	pointer, err := proc.VM().SetBytes([]byte(addr))
+	if err != nil {
+		proc.VM().Logger().Error("OwnerAddr SetBytes", "err", err)
+		return 0
+	}
+
+	return pointer
+}
+
+func ChangeContractOwner(proc *exec.Process, cAddrIndex int32, addrIndex int32) int32 {
+	cAddr, err := proc.ReadString(int64(cAddrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("ChangeContractOwner can't read addr", "err", err)
+		return -1
+	}
+
+	addr, err := proc.ReadString(int64(addrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("ChangeContractOwner can't read addr", "err", err)
+		return -1
+	}
+
+	err = ankrcontext.GetBCContext().ChangeContractOwner(cAddr, addr)
+	if err != nil {
+		return -1
+	}
+
+	return 0
+}
+
 func SetBalance(proc *exec.Process, addrIndex int32, symbolIndex int32, amountIndex int32) int32 {
 	addr, err := proc.ReadString(int64(addrIndex))
 	if err != nil {
@@ -747,6 +793,107 @@ func Height(proc *exec.Process) int32 {
 	return int32(height)
 }
 
+func IsContractNormal(proc *exec.Process, cAddrIndex int32) int32 {
+	cAddr, err := proc.ReadString(int64(cAddrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("IsContractNormal can't read cAddr", "err", err)
+		return -1
+	}
 
+	isNormal := ankrcontext.GetBCContext().IsContractNormal(cAddr)
+
+	if !isNormal {
+		return -1
+	}
+
+	return 1
+}
+
+func SuspendContract(proc *exec.Process, cAddrIndex int32) int32 {
+	cAddr, err := proc.ReadString(int64(cAddrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("SuspendContract can't read cAddr", "err", err)
+		return -1
+	}
+
+	err = ankrcontext.GetBCContext().UpdateContractState(cAddr, ankrcmm.ContractSuspend)
+	if err != nil {
+		proc.VM().Logger().Error("SuspendContract can't UpdateContractState", "err", err)
+		return -1
+	}
+
+	return 0
+}
+
+func UnsuspendContract(proc *exec.Process, cAddrIndex int32) int32 {
+	cAddr, err := proc.ReadString(int64(cAddrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("SuspendContract can't read cAddr", "err", err)
+		return -1
+	}
+
+	err = ankrcontext.GetBCContext().UpdateContractState(cAddr, ankrcmm.ContractNormal)
+	if err != nil {
+		proc.VM().Logger().Error("SuspendContract can't UpdateContractState", "err", err)
+		return -1
+	}
+
+	return  0
+}
+
+func StoreJsonObject(proc *exec.Process, cAddrIndex int32, keyIndex int32, jsonObjIndex int32) int32 {
+	cAddr, err := proc.ReadString(int64(cAddrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("StoreJsonObject can't read addr", "err", err)
+		return -1
+	}
+
+	key, err := proc.ReadString(int64(keyIndex))
+	if err != nil {
+		proc.VM().Logger().Error("StoreJsonObject can't read key", "err", err)
+		return -1
+	}
+
+	jsonObject, err := proc.ReadString(int64(jsonObjIndex))
+	if err != nil {
+		proc.VM().Logger().Error("StoreJsonObject can't read jsonObject", "err", err)
+		return -1
+	}
+
+	err = ankrcontext.GetBCContext().AddContractRelatedObject(cAddr, key, jsonObject)
+	if err != nil {
+		return -1
+	}
+
+	return 0
+}
+
+func LoadJsonObject(proc *exec.Process, cAddrIndex int32, keyIndex int32) uint64 {
+	cAddr, err := proc.ReadString(int64(cAddrIndex))
+	if err != nil {
+		proc.VM().Logger().Error("LoadJsonObject can't read addr", "err", err)
+		return 0
+	}
+
+	key, err := proc.ReadString(int64(keyIndex))
+	if err != nil {
+		proc.VM().Logger().Error("LoadJsonObject can't read key", "err", err)
+		return 0
+	}
+
+	jsonObj, err := ankrcontext.GetBCContext().LoadContractRelatedObject(cAddr, key)
+	if err != nil {
+		proc.VM().Logger().Error("LoadJsonObject LoadContractRelatedObject err", "err", err)
+		return 0
+	}
+
+	pointer, err := proc.VM().SetBytes([]byte(jsonObj))
+	if err != nil {
+		proc.VM().Logger().Error("LoadJsonObject SetBytes", "err", err)
+		return 0
+	}
+
+	return pointer
+}
 
 

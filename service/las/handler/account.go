@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	_ "encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	ankrcmm "github.com/Ankr-network/ankr-chain/common"
 	lascmm "github.com/Ankr-network/ankr-chain/service/las/common"
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 	_ "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -25,7 +25,7 @@ func QueryAccountInfoHandler(c *client.Client) http.HandlerFunc {
 		respData := &ankrcmm.AccountQueryResp{}
 
 		isNeedVerify := viper.GetBool("proof-verify")
-		err := c.QueryWithOption("/store/account", 0, isNeedVerify, lascmm.DefaultLasHome, queryData, respData)
+		err := c.QueryWithOption("/store/account", 0, isNeedVerify, viper.GetString(lascmm.FlagHome), queryData, respData)
 		if err != nil {
 			WriteErrorResponse(resp, http.StatusInternalServerError, err.Error())
 			return
@@ -50,7 +50,7 @@ func QueryAccountNonceHandler(c *client.Client) http.HandlerFunc {
 		respData := &ankrcmm.NonceQueryResp{}
 
 		isNeedVerify := viper.GetBool("proof-verify")
-		err := c.QueryWithOption("/store/nonce", 0, isNeedVerify, lascmm.DefaultLasHome, queryData, respData)
+		err := c.QueryWithOption("/store/nonce", 0, isNeedVerify, viper.GetString(lascmm.FlagHome), queryData, respData)
 		if err != nil {
 			WriteErrorResponse(resp, http.StatusInternalServerError, err.Error())
 			return
@@ -94,7 +94,7 @@ func QueryAccountBalanceHandler(c *client.Client) http.HandlerFunc {
 		queryData := &ankrcmm.BalanceQueryReq{addr, symbol}
 		respData := &ankrcmm.BalanceQueryResp{}
 		isNeedVerify := viper.GetBool("proof-verify")
-		err = c.QueryWithOption("/store/balance", 0, isNeedVerify, lascmm.DefaultLasHome, queryData, respData)
+		err = c.QueryWithOption("/store/balance", 0, isNeedVerify, viper.GetString(lascmm.FlagHome), queryData, respData)
 		if err != nil {
 			WriteErrorResponse(resp, http.StatusInternalServerError, err.Error())
 			return

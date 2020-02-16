@@ -17,8 +17,8 @@ Available Commands:
 
 Flags:
       --chain-id string    block chain id (default "ankr-chain")
-      --gas-limit string   gas limmit (default "20000")
-      --gas-price string   gas price (default "10000000000000000")
+      --gas-limit string   gas limmit (default "20000000")
+      --gas-price string   gas price (default "10000000000000")
   -h, --help               help for admin
       --memo string        transaction memo
       --nodeurl string     url of a validator
@@ -31,8 +31,8 @@ Use "ankr-cli admin [command] --help" for more information about a command.
 ### usage
     * Global Flags:
           --chain-id string    block chain id (default "ankr-chain")
-          --gas-limit string   gas limmit (default "20000")
-          --gas-price string   gas price (default "10000000000000000")
+          --gas-limit string   gas limmit (default "20000000")
+          --gas-price string   gas price (default "10000000000000")
           --memo string        transaction memo
           --nodeurl string     url of a validator
           --privkey string     operator private key

@@ -48,7 +48,6 @@ func (sp *IavlStoreApp) InitGenesisAccount() {
 	accInfo.PubKey  = ""
 	accInfo.Amounts = []ankrcmm.Amount{ankrcmm.Amount{ankrcmm.Currency{"ANKR",18}, totalSupply.Bytes()}}
 
-
 	sp.addAccountInfo(&accInfo)
 }
 
@@ -367,4 +366,51 @@ func (sp *IavlStoreApp) AccountList(height int64) ([]string, uint64) {
 	}else {
 		return nil, addrCount
 	}
+}
+
+func (sp *IavlStoreApp) AddBoundRole(address string, roleName string) {
+	if address == "" {
+		return
+	}
+
+	if !sp.iavlSM.storeMap[IavlStoreAccountKey].Has([]byte(containAccountPrefix(address))) {
+		return
+	}
+
+	accBytes, err := sp.iavlSM.storeMap[IavlStoreAccountKey].Get([]byte(containAccountPrefix(address)))
+	if err != nil || accBytes == nil{
+		return
+	}
+
+	accInfo := account.DecodeAccount(sp.cdc, accBytes)
+	for _, r := range accInfo.Roles {
+		if r == roleName {
+			return
+		}
+	}
+
+	accInfo.Roles = append(accInfo.Roles, roleName)
+}
+
+func (sp *IavlStoreApp) LoadBoundRoles(address string) ([]string, error){
+	if address == "" {
+		return nil, errors.New("can't load bound roles, blank address")
+	}
+
+	if !sp.iavlSM.storeMap[IavlStoreAccountKey].Has([]byte(containAccountPrefix(address))) {
+		return nil, fmt.Errorf("can't load bound roles, address=%s", address)
+	}
+
+	accBytes, err := sp.iavlSM.storeMap[IavlStoreAccountKey].Get([]byte(containAccountPrefix(address)))
+	if err != nil || accBytes == nil{
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+ 		return nil, fmt.Errorf("can't load bound roles, address=%s, err=%s", address, errStr)
+	}
+
+	accInfo := account.DecodeAccount(sp.cdc, accBytes)
+
+	return accInfo.Roles, nil
 }

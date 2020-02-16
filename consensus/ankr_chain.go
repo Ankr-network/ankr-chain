@@ -72,7 +72,7 @@ func NewAnkrChainApplication(dbDir string, appName string, l log.Logger) *AnkrCh
 		txSerializer: serializer.NewTxSerializerCDC(),
 		contract:     contract.NewContract(appStore, l.With("module", "contract")),
 		logger:       l,
-		minGasPrice:  ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000000).Bytes()},
+		minGasPrice:  ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 	}
 }
 
@@ -87,7 +87,7 @@ func NewMockAnkrChainApplication(appName string, l log.Logger) *AnkrChainApplica
 		txSerializer: serializer.NewTxSerializerCDC(),
 		contract:     contract.NewContract(appStore, l.With("module", "contract")),
 		logger:       l,
-		minGasPrice:  ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000000).Bytes()},
+		minGasPrice:  ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 	}
 }
 

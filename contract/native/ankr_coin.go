@@ -33,7 +33,7 @@ func NewAnkrCoin(store appstore.AppStore, log log.Logger) *AnkrCoin {
 	conInfo, _, _, _, err := store.LoadContract(string(addr), 0, false)
 	if err == nil && conInfo == nil {
 		store.BuildCurrencyCAddrMap("ANKR", addr)
-		store.SaveContract(string(addr), &ankrcmm.ContractInfo{addr, "ANKR", account.AccountManagerInstance().GenesisAccountAddress(), codePrefixBytes, ""})
+		store.SaveContract(string(addr), &ankrcmm.ContractInfo{addr, "ANKR", account.AccountManagerInstance().GenesisAccountAddress(), codePrefixBytes, "", ankrcmm.ContractNormal, make(map[string]string)})
 		store.SetBalance(account.AccountManagerInstance().GenesisAccountAddress(), ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, totalSup.Bytes()})
 	}
 
@@ -117,7 +117,7 @@ func (ac *AnkrCoin) Transfer(toAddr string, amount string) bool {
 	balSender = new(big.Int).Sub(balSender, value)
 	balTo     = new(big.Int).Add(balTo, value)
 
-	stepGas := gas.GasSlowStep * 2
+	stepGas := uint64(100000 * 2)
 	isSucess = ac.context.SpendGas(new(big.Int).SetUint64(stepGas))
 	if !isSucess {
 		ac.log.Error("AnkrCoin Transfer gasUsed reach the limit value after gas slow step", "senderAddr", ac.context.SenderAddr())

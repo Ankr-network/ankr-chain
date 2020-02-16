@@ -2,7 +2,9 @@ package integration
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/big"
+	"strings"
 	"testing"
 
 	ankrcmm "github.com/Ankr-network/ankr-chain/common"
@@ -63,4 +65,13 @@ func TestBigCmp(t *testing.T) {
 	cmpR := bigOne.Cmp(bigTwo)
 
 	t.Logf("cmpR=%d", cmpR)
+}
+
+func TestReadContract(t *testing.T) {
+	rawBytes, err := ioutil.ReadFile("F:/GoPath/src/github.com/Ankr-network/ankr-chain/contract/example/cpp/ResourceEscrow.wasm")
+	if err != nil {
+		t.Errorf("can't read wasm file: %s", err.Error())
+	}
+
+	fmt.Printf("%s\n", strings.Replace(strings.Trim(fmt.Sprint(rawBytes), "[]"), " ", ",", -1))
 }

@@ -38,7 +38,7 @@ func TestMultiAccountToOneWithSingleNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "test-chain-LqLg1M",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test transfer",
 		Version: "1.0.2",
 	}
@@ -180,7 +180,7 @@ func TestMultiAccountToOneWithMultiNode(t *testing.T) {
 	msgHeader := client.TxMsgHeader{
 		ChID: "Ankr-test-chain",
 		GasLimit: new(big.Int).SetUint64(1000).Bytes(),
-		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(100000000000000000).Bytes()},
+		GasPrice: ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
 		Memo: "test transfer",
 		Version: "1.0.2",
 	}

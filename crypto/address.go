@@ -13,13 +13,28 @@ const (
 	CertAddrTypeRemove
 )
 
+func IsContractAddress(addr string) bool {
+	len := len([]rune(addr))
+	subStr := addr[len-3:]
+	if subStr == "@ak" {
+		return true
+	}
+
+	return false
+}
+
 func CreateContractAddress(callerAddr string, nonce uint64) string {
 	hasher := tmhash.NewTruncated()
 	hasher.Write([]byte(callerAddr))
 	hasher.Write(common.UInt64ToBytes(nonce))
 	bytesSum :=  hasher.Sum(nil)
 
-	return  crypto.Address(bytesSum).String()
+	rawAddr  := crypto.Address(bytesSum).String()
+	rawAddrR := []rune(rawAddr)
+
+	conAddr := append(rawAddrR[:len(rawAddrR)-3], []rune("@AK")...)
+
+	return  string(conAddr)
 }
 
 func CreateCertAddress(pubBS64 string, dcName string, addrType CertAddrType) string{

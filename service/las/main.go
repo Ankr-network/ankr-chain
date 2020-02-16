@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/Ankr-network/ankr-chain/service/las/commands"
-	lascmm "github.com/Ankr-network/ankr-chain/service/las/common"
 	_ "github.com/Ankr-network/ankr-chain/service/las/statik"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -24,7 +23,7 @@ func main() {
 		commands.Start(),
 	)
 
-	executor := cli.PrepareMainCmd(rootCmd, "ANKRCHAINlAS", os.ExpandEnv(lascmm.DefaultLasHome))
+	executor := cli.PrepareMainCmd(rootCmd, "ANKRCHAINlAS", os.ExpandEnv("$HOME/.ankrchain-las"))
 	err := executor.Execute()
 	if err != nil {
 		panic(err)
