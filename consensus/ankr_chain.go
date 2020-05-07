@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 
 	"github.com/Ankr-network/ankr-chain/account"
 	ankrcmm "github.com/Ankr-network/ankr-chain/common"
@@ -23,6 +24,7 @@ import (
 	val "github.com/Ankr-network/ankr-chain/tx/validator"
 	akver "github.com/Ankr-network/ankr-chain/version"
 	"github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmpubsub "github.com/tendermint/tendermint/libs/pubsub"
 	tmCoreTypes "github.com/tendermint/tendermint/types"
@@ -32,16 +34,18 @@ import (
 var _ types.Application = (*AnkrChainApplication)(nil)
 
 type AnkrChainApplication struct {
-	ChainId      ankrcmm.ChainID
-	APPName       string
-	latestHeight  int64
-	latestAPPHash []byte
-	app          appstore.AppStore
-	txSerializer tx.TxSerializer
-	contract     contract.Contract
-	pubsubServer *tmpubsub.Server
-	logger       log.Logger
-	minGasPrice  ankrcmm.Amount
+	ChainId         ankrcmm.ChainID
+	APPName         string
+	latestHeight    int64
+	latestAPPHash   []byte
+	app             appstore.AppStore
+	txSerializer    tx.TxSerializer
+	contract        contract.Contract
+	pubsubServer    *tmpubsub.Server
+	logger          log.Logger
+	minGasPrice     ankrcmm.Amount
+	checkTxRecord   *sync.Map
+	deliverTxRecord *sync.Map
 }
 
 func NewAppStore(dbDir string, l log.Logger) appstore.AppStore {
@@ -66,13 +70,15 @@ func NewAnkrChainApplication(dbDir string, appName string, l log.Logger) *AnkrCh
 	chainID := appStore.ChainID()
 
 	return &AnkrChainApplication{
-		ChainId:      ankrcmm.ChainID(chainID),
-		APPName:      appName,
-		app:          appStore,
-		txSerializer: serializer.NewTxSerializerCDC(),
-		contract:     contract.NewContract(appStore, l.With("module", "contract")),
-		logger:       l,
-		minGasPrice:  ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
+		ChainId:         ankrcmm.ChainID(chainID),
+		APPName:         appName,
+		app:             appStore,
+		txSerializer:    serializer.NewTxSerializerCDC(),
+		contract:        contract.NewContract(appStore, l.With("module", "contract")),
+		logger:          l,
+		minGasPrice:     ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
+		checkTxRecord:   &sync.Map{},
+		deliverTxRecord: &sync.Map{},
 	}
 }
 
@@ -82,12 +88,14 @@ func NewMockAnkrChainApplication(appName string, l log.Logger) *AnkrChainApplica
 	account.AccountManagerInstance().Init(appStore)
 
 	return &AnkrChainApplication{
-		APPName:      appName,
-		app:          appStore,
-		txSerializer: serializer.NewTxSerializerCDC(),
-		contract:     contract.NewContract(appStore, l.With("module", "contract")),
-		logger:       l,
-		minGasPrice:  ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
+		APPName:         appName,
+		app:             appStore,
+		txSerializer:    serializer.NewTxSerializerCDC(),
+		contract:        contract.NewContract(appStore, l.With("module", "contract")),
+		logger:          l,
+		minGasPrice:     ankrcmm.Amount{ankrcmm.Currency{"ANKR", 18}, new(big.Int).SetUint64(10000000000000).Bytes()},
+		checkTxRecord:   &sync.Map{},
+		deliverTxRecord: &sync.Map{},
 	}
 }
 
@@ -204,26 +212,60 @@ func (app *AnkrChainApplication) dispossTxWithCDCV0(tx []byte) (*tx.TxMsgCDCV0, 
 }
 
 func (app *AnkrChainApplication) DeliverTx(tx []byte) types.ResponseDeliverTx {
+	txHash := fmt.Sprintf("%X", tmhash.Sum(tx))
+	if _, ok := app.deliverTxRecord.Load(txHash); ok {
+		app.logger.Error("AnkrChainApplication DeliverTx duplicate tx error", "txHash", txHash)
+		return types.ResponseDeliverTx{Code: code.CodeTypeDuplicateTxError, Log: fmt.Sprintf("duplicated tx, txHash=%s", txHash)}
+	}
+
+	app.deliverTxRecord.Store(txHash, true)
+
 	txMsg, codeVal, logStr := app.dispossTxWithCDCV1(tx)
 	if codeVal == code.CodeTypeOK {
-		return txMsg.DeliverTx(app)
+		rd := txMsg.DeliverTx(app)
+		if rd.Code != code.CodeTypeOK {
+			app.deliverTxRecord = &sync.Map{}
+		}
+		return rd
 	} else {
 		app.logger.Info("AnkrChainApplication DeliverTx new tx cdcv1 serialize error, switch to cdcv0 tx", "logStr", logStr)
 		txMsgCDCV0, codeVal, logStr := app.dispossTxWithCDCV0(tx)
 		if codeVal == code.CodeTypeOK {
-			return txMsgCDCV0.DeliverTx(app)
+			rdCDCV0 := txMsgCDCV0.DeliverTx(app)
+			if rdCDCV0.Code != code.CodeTypeOK {
+				app.deliverTxRecord = &sync.Map{}
+			}
+			return rdCDCV0
 		}
 
 		app.logger.Info("AnkrChainApplication DeliverTx new tx cdcv0 serialize error, switch to V0 tx", "logStr", logStr)
 	}
 
-	return v0.MsgRouterInstance().DeliverTx(tx, app.AppStore())
+	rdV0 := v0.MsgRouterInstance().DeliverTx(tx, app.AppStore())
+	if rdV0.Code != code.CodeTypeOK {
+		app.deliverTxRecord = &sync.Map{}
+	}
+	return rdV0
 }
 
 func (app *AnkrChainApplication) CheckTx(tx []byte) types.ResponseCheckTx {
+	txHash := fmt.Sprintf("%X", tmhash.Sum(tx))
+	if _, ok := app.checkTxRecord.Load(txHash); ok {
+		app.logger.Error("AnkrChainApplication CheckTx duplicate tx error", "txHash", txHash)
+		return types.ResponseCheckTx{Code: code.CodeTypeDuplicateTxError, Log: fmt.Sprintf("duplicated tx, txHash=%s", txHash)}
+	}
+
+	app.checkTxRecord.Store(txHash, true)
+
 	txMsg, codeVal, logStr := app.dispossTxWithCDCV1(tx)
 	if codeVal == code.CodeTypeOK {
-		return txMsg.CheckTx(app)
+		rc := txMsg.CheckTx(app)
+		if rc.Code != code.CodeTypeOK {
+			app.checkTxRecord.Delete(txHash)
+		}
+		return rc
+	} else {
+		app.checkTxRecord.Delete(txHash)
 	}
 
 	return types.ResponseCheckTx{ Code: codeVal, Log: logStr}
@@ -255,7 +297,11 @@ func (app *AnkrChainApplication) Commit() types.ResponseCommit {
 		panic(fmt.Errorf("AnkrChainApplication Commit appHash check error, height=%d. Got %X, expected %X", app.latestHeight, appHashH, app.latestAPPHash))
 	}
 
-	return app.app.Commit()
+	rc := app.app.Commit()
+
+	app.deliverTxRecord = &sync.Map{}
+
+	return rc
 }
 
 func (app *AnkrChainApplication) Query(reqQuery types.RequestQuery) (resQuery types.ResponseQuery) {
