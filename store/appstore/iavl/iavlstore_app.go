@@ -46,6 +46,7 @@ type IavlStoreApp struct {
 	queryHandleMap  map[string]*storeQueryHandler
 	accStoreLocker  sync.RWMutex
 	certStoreLocker sync.RWMutex
+	totalTxLocker   sync.RWMutex
 }
 
 func containCertKeyPrefix(dcnsName string) string {
@@ -120,6 +121,8 @@ func NewIavlStoreApp(dbDir string, storeLog log.Logger) *IavlStoreApp {
 
 	iavlSApp := &IavlStoreApp{iavlSM: iavlSM, lastCommitID: lcmmID, storeLog: storeLog, cdc: amino.NewCodec(), kvState: kvState}
 
+	iavlSApp.totalTxLocker.Lock()
+
 	if !iavlSM.storeMap[IAvlStoreMainKey].Has([]byte(TotalTxKey)) {
 		buf := make([]byte, binary.MaxVarintLen64)
 		n := binary.PutVarint(buf, int64(0))
@@ -135,6 +138,8 @@ func NewIavlStoreApp(dbDir string, storeLog log.Logger) *IavlStoreApp {
 
 	lastHash := make([]byte, 8)
 	binary.PutVarint(lastHash, iavlSApp.totalTx)
+
+	iavlSApp.totalTxLocker.Unlock()
 
 	if lcmmID.Hash != nil {
 		lcmmID.Hash = lastHash
@@ -256,14 +261,18 @@ func (sp *IavlStoreApp) LastCommit() *ankrcmm.CommitID{
 }
 
 func (sp *IavlStoreApp) Commit() types.ResponseCommit {
-    commitID := sp.iavlSM.Commit(sp.lastCommitID.Version, sp.totalTx)
+	sp.totalTxLocker.RLock()
+	curTotalTx := sp.totalTx
+	sp.totalTxLocker.RUnlock()
+
+    commitID := sp.iavlSM.Commit(sp.lastCommitID.Version, curTotalTx)
 
 	sp.lastCommitID.Hash = sp.lastCommitID.Hash[0:0]
 
     sp.lastCommitID.Version = commitID.Version
 	sp.lastCommitID.Hash    = append(sp.lastCommitID.Hash, commitID.Hash...)
 
-	sp.storeLog.Info("IavlStoreApp Commit", "totalTx", sp.totalTx, "appHash", fmt.Sprintf("%X", commitID.Hash))
+	sp.storeLog.Info("IavlStoreApp Commit", "totalTx", curTotalTx, "appHash", fmt.Sprintf("%X", commitID.Hash))
 
 	return types.ResponseCommit{Data: commitID.Hash}
 }
@@ -515,7 +524,7 @@ func (sp *IavlStoreApp) Height() int64 {
 	return sp.lastCommitID.Version
 }
 
-func (sp *IavlStoreApp) TotalTx(height int64, prove bool) (int64, string, *iavl.RangeProof, []byte, error) {
+func (sp *IavlStoreApp) totalTxWithoutlock(height int64, prove bool) (int64, string, *iavl.RangeProof, []byte, error) {
 	if height <= 0 {
 		height = sp.Height()
 	}
@@ -528,26 +537,71 @@ func (sp *IavlStoreApp) TotalTx(height int64, prove bool) (int64, string, *iavl.
 
 		totalTx, _ := binary.Varint(val)
 
+		sp.storeLog.Info("IavlStoreApp totalTxWithoutlock", "sp.Height", sp.Height, "sp.totalTx", sp.totalTx, "store.totalTx", totalTx)
+
 		return totalTx, TotalTxKey, proof, val, nil
 	}
 
 	return 0, TotalTxKey, nil, nil, fmt.Errorf("Not exist TotalTxKey(%s), height=%d", TotalTxKey, height)
 }
 
-func (sp *IavlStoreApp) SetTotalTx(totalTx int64) {
+func (sp *IavlStoreApp) TotalTx(height int64, prove bool) (int64, string, *iavl.RangeProof, []byte, error) {
+	sp.totalTxLocker.RLock()
+	defer  sp.totalTxLocker.RUnlock()
+
+	sp.storeLog.Info("IavlStoreApp TotalTx", "sp.Height", sp.Height, "height", height, "prove", prove)
+
+	return sp.totalTxWithoutlock(height, prove)
+}
+
+func (sp *IavlStoreApp) totalTxLatestWithoutlock() (int64, error) {
+	if sp.iavlSM.storeMap[IAvlStoreMainKey].Has([]byte(TotalTxKey)) {
+		val, err := sp.iavlSM.storeMap[IAvlStoreMainKey].Get([]byte(TotalTxKey))
+		if err != nil {
+			return 0, err
+		}
+
+		totalTx, _ := binary.Varint(val)
+
+		sp.storeLog.Info("IavlStoreApp totalTxWithoutlock", "sp.Height", sp.Height(), "sp.totalTx", sp.totalTx, "store.totalTx", totalTx)
+
+		return totalTx, nil
+	}
+
+	return 0, fmt.Errorf("Not exist TotalTxKey(%s), height=%d", TotalTxKey, sp.Height())
+}
+
+func (sp *IavlStoreApp) setTotalTxWithoutlock(totalTx int64) {
 	sp.totalTx = totalTx
 
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(buf, sp.totalTx)
 	sp.iavlSM.storeMap[IAvlStoreMainKey].Set([]byte(TotalTxKey), buf[:n])
+
+	sp.storeLog.Info("IavlStoreApp setTotalTxWithoutlock", "sp.Height", sp.Height(), "sp.totalTx", sp.totalTx)
+}
+
+func (sp *IavlStoreApp) SetTotalTx(totalTx int64) {
+	sp.totalTxLocker.Lock()
+	defer sp.totalTxLocker.Unlock()
+
+	sp.storeLog.Info("IavlStoreApp SetTotalTx", "sp.Height", sp.Height(), "sp.totalTx", sp.totalTx, "totalTx", totalTx)
+
+	sp.setTotalTxWithoutlock(totalTx)
 }
 
 func (sp *IavlStoreApp) IncTotalTx() int64 {
-	sp.totalTx++
+	sp.totalTxLocker.Lock()
+	defer sp.totalTxLocker.Unlock()
 
+	sp.storeLog.Info("IavlStoreApp IncTotalTx", "sp.Height", sp.Height(), "sp.totalTx", sp.totalTx)
+
+	sp.totalTx++
 	buf := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(buf, sp.totalTx)
 	sp.iavlSM.storeMap[IAvlStoreMainKey].Set([]byte(TotalTxKey), buf[:n])
+
+	sp.storeLog.Info("IavlStoreApp IncTotalTx", "sp.Height", sp.Height(), "store.TotalTx", sp.totalTx)
 
 	return sp.totalTx
 }
@@ -569,14 +623,16 @@ func (sp *IavlStoreApp) ResetKVState() {
 }
 
 func (sp *IavlStoreApp) Rollback() {
-	curTotalTx, _, _, _ , _  := sp.TotalTx(0, false)
+	sp.totalTxLocker.Lock()
+	defer sp.totalTxLocker.Unlock()
+
+	curTotalTx := sp.totalTx//sp.totalTxLatestWithoutlock
 
 	for _, iavlS := range sp.iavlSM.storeMap {
 		iavlS.Rollback()
 	}
 
-	sp.totalTx = curTotalTx
-	sp.SetTotalTx(curTotalTx)
+	sp.setTotalTxWithoutlock(curTotalTx)
 }
 
 func (sp *IavlStoreApp) DB() dbm.DB {

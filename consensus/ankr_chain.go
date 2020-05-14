@@ -212,6 +212,7 @@ func (app *AnkrChainApplication) dispossTxWithCDCV0(tx []byte) (*tx.TxMsgCDCV0, 
 }
 
 func (app *AnkrChainApplication) DeliverTx(tx []byte) types.ResponseDeliverTx {
+	app.logger.Info("AnkrChainApplication DeliverTx", "latestHeight", app.latestHeight, "latestAPPHash", fmt.Sprintf("%X", app.latestAPPHash))
 	txHash := fmt.Sprintf("%X", tmhash.Sum(tx))
 	if _, ok := app.deliverTxRecord.Load(txHash); ok {
 		app.logger.Error("AnkrChainApplication DeliverTx duplicate tx error", "txHash", txHash)
@@ -222,6 +223,7 @@ func (app *AnkrChainApplication) DeliverTx(tx []byte) types.ResponseDeliverTx {
 
 	txMsg, codeVal, logStr := app.dispossTxWithCDCV1(tx)
 	if codeVal == code.CodeTypeOK {
+		app.logger.Info("AnkrChainApplication DeliverTx, txMsg.DeliverTx invoked", "logStr", logStr)
 		rd := txMsg.DeliverTx(app)
 		if rd.Code != code.CodeTypeOK {
 			app.deliverTxRecord = &sync.Map{}
@@ -231,6 +233,7 @@ func (app *AnkrChainApplication) DeliverTx(tx []byte) types.ResponseDeliverTx {
 		app.logger.Info("AnkrChainApplication DeliverTx new tx cdcv1 serialize error, switch to cdcv0 tx", "logStr", logStr)
 		txMsgCDCV0, codeVal, logStr := app.dispossTxWithCDCV0(tx)
 		if codeVal == code.CodeTypeOK {
+			app.logger.Info("AnkrChainApplication DeliverTx, txMsgCDCV0.DeliverTx invoked", "logStr", logStr)
 			rdCDCV0 := txMsgCDCV0.DeliverTx(app)
 			if rdCDCV0.Code != code.CodeTypeOK {
 				app.deliverTxRecord = &sync.Map{}
@@ -241,6 +244,7 @@ func (app *AnkrChainApplication) DeliverTx(tx []byte) types.ResponseDeliverTx {
 		app.logger.Info("AnkrChainApplication DeliverTx new tx cdcv0 serialize error, switch to V0 tx", "logStr", logStr)
 	}
 
+	app.logger.Info("AnkrChainApplication DeliverTx, v0.MsgRouterInstance().DeliverTx invoked", "logStr", logStr)
 	rdV0 := v0.MsgRouterInstance().DeliverTx(tx, app.AppStore())
 	if rdV0.Code != code.CodeTypeOK {
 		app.deliverTxRecord = &sync.Map{}

@@ -132,15 +132,17 @@ func TestIavlStoreMultiOpEncode(t *testing.T) {
 func TestRollBack(t *testing.T)  {
 	storeAPP := NewMockIavlStoreApp()
 
-	storeAPP.SetTotalTx(28)
+	storeAPP.IncTotalTx()
+	storeAPP.IncTotalTx()
 
-	storeAPP.Set([]byte("testkey1"), []byte("testvalue1"))
+	storeAPP.Commit()
 
-	//storeAPP.Rollback()
+	storeAPP.IncTotalTx()
+	storeAPP.Rollback()
 
-	totalTx, _,_, _, _ := storeAPP.TotalTx(0, false)
-	fmt.Printf("totalTx=%d\n", totalTx)
-	fmt.Printf("testkey1's=%s\n", string(storeAPP.Get([]byte("testkey1"))))
+	totalTx1, _ := storeAPP.totalTxLatestWithoutlock()
+	totalTx2, _, _, _, _ := storeAPP.totalTxWithoutlock(0, false)
+	fmt.Printf("totalTx1=%d, totalTx2=%d\n", totalTx1, totalTx2)
 }
 
 func TestQueryInfo(t *testing.T) {
