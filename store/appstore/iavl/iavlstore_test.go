@@ -143,3 +143,13 @@ func TestRollBack(t *testing.T)  {
 	fmt.Printf("testkey1's=%s\n", string(storeAPP.Get([]byte("testkey1"))))
 }
 
+func TestQueryInfo(t *testing.T) {
+	storeLog := log.NewNopLogger()
+
+
+	dbApp := NewIavlStoreApp("F:\\dccntendermint\\mainnode\\arthurlog\\data", storeLog)
+	countTx, _, _, _, _ := dbApp.TotalTx(0, false)
+
+	fmt.Printf("countTx=%d\n", countTx)
+}
+

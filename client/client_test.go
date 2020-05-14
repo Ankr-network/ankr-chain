@@ -2,6 +2,8 @@ package client
 
 import (
 	"fmt"
+	txcmm "github.com/Ankr-network/ankr-chain/tx/common"
+	"github.com/Ankr-network/ankr-chain/tx/metering"
 	"github.com/Ankr-network/ankr-chain/tx/token"
 	"math/big"
 	"testing"
@@ -29,9 +31,9 @@ func TestSubscribeAndWait(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	c := NewClient("chain.dccn.ankr.com:26657")
+	c := NewClient("https://chain-03.dccn.ankr.com:443")
 
-	height := int64(1785347)
+	height := int64(7720299)
 	rsB, _ := c.Block(&height)
 
 	fmt.Printf("appHash=%s\n", rsB.Block.AppHash.String())
@@ -42,21 +44,27 @@ func TestBlock(t *testing.T) {
 		txEntry, _ := c.Tx(tx.Hash(), false )
 		fmt.Printf("code=%d, log=%s\n",  txEntry.TxResult.Code, txEntry.TxResult.Log)
 		txMsg, _ := NewTxDecoder().Decode(txEntry.Tx)
-		fmt.Printf("txMsg=%v\n", txMsg)
-		tf := txMsg.ImplTxMsg.(*token.TransferMsg)
-		fmt.Printf("tf=%v\n", tf)
+		//fmt.Printf("txMsg=%v\n", txMsg)
+		if txMsg.Type() == txcmm.TxMsgTypeMeteringMsg {
+			tf := txMsg.ImplTxMsg.(*metering.MeteringMsg)
+			//fmt.Printf("Nonce=%d, type=%s, tf.From=%s, tf. tf.To=%s, tf.val=%s, gasUsed=%d, gasLimit=%d\n", txMsg.Nonce, tf.Type(), tf.FromAddr, tf.ToAddr, new(big.Int).SetBytes(tf.Amounts[0].Value).String(), txMsg.GasUsed, new(big.Int).SetBytes(txMsg.GasLimit).Uint64())
+			fmt.Printf("Nonce=%d, type=%s, tf.From=%s\n", txMsg.Nonce, tf.Type(), tf.FromAddr)
+		}
 	}
 }
 
 func TestTxSearch(t *testing.T) {
-	c := NewClient("chain.dccn.ankr.com:26657")
-	sRS, _ := c.TxSearch("app.B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67=1", false, 1, 100)
+	c := NewClient("https://chain-03.dccn.ankr.com:443")
+	sRS, err := c.TxSearch("app.toaddress='C9DAEE774002099874EEF0EF1DFB742F5F256D96A8C@AK'", false, 1, 10)
+	if err != nil {
+		fmt.Printf("err=%s\n", err.Error())
+	}
 	for _, txRs := range sRS.Txs  {
 		fmt.Printf("txHash=%s, height=%d\n", txRs.Hash.String(), txRs.Height)
 		//fmt.Printf("code=%d, log=%s\n",  txRs.TxResult.Code, txRs.TxResult.Log)
 		txMsg, _ := NewTxDecoder().Decode(txRs.Tx)
 		//fmt.Printf("txMsg=%v\n", txMsg)
 		tf := txMsg.ImplTxMsg.(*token.TransferMsg)
-		fmt.Printf("tf.From=%s, tf.To=%s, tf.val=%s, gasUsed=%d, gasLimit=%d\n", tf.FromAddr, tf.ToAddr, new(big.Int).SetBytes(tf.Amounts[0].Value).String(), txRs.TxResult.GasUsed, new(big.Int).SetBytes(txMsg.GasLimit).Uint64())
+		fmt.Printf("Nonce=%d, type=%s, tf.From=%s, tf. tf.To=%s, tf.val=%s, gasUsed=%d, gasLimit=%d\n", txMsg.Nonce, tf.Type(), tf.FromAddr, tf.ToAddr, new(big.Int).SetBytes(tf.Amounts[0].Value).String(), txRs.TxResult.GasUsed, new(big.Int).SetBytes(txMsg.GasLimit).Uint64())
 	}
 }

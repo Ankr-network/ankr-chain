@@ -205,6 +205,23 @@ func (c *Client) BroadcastTxCommit(txBytes []byte) (txHash string, commitHeight 
 	return result.Hash.String(), result.Height, result.DeliverTx.Log, nil
 }
 
+func (c *Client) BroadcastTxCommitWithoutWaiting(txBytes []byte) (txHash string, commitHeight int64, log string, err error) {
+	result, err := c.cHttp.BroadcastTxCommit(txBytes)
+	if err != nil {
+		return "", -1, "", err
+	}
+
+	if result.CheckTx.Code != code.CodeTypeOK {
+		return "", -1, "", fmt.Errorf("Client BroadcastTxCommit CheckTx response code not ok, code=%d, log=%s", result.CheckTx.Code, result.CheckTx.Log)
+	}
+
+	if result.DeliverTx.Code != code.CodeTypeOK {
+		return result.Hash.String(), result.Height, "", fmt.Errorf("Client BroadcastTxCommit DeliverTx response code not ok, code=%d, log=%s", result.DeliverTx.Code, result.DeliverTx.Log)
+	}
+
+	return result.Hash.String(), result.Height, result.DeliverTx.Log, nil
+}
+
 func (c *Client) Status() (*ctypes.ResultStatus, error) {
 	return c.cHttp.Status()
 }
