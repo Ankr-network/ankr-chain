@@ -31,6 +31,10 @@ import (
 	"github.com/tendermint/tendermint/version"
 )
 
+var appTxsPatchMap = map[int64]int64{ //height->totalTxs
+	7711962:4822892,
+}
+
 var _ types.Application = (*AnkrChainApplication)(nil)
 
 type AnkrChainApplication struct {
@@ -384,5 +388,8 @@ func (app *AnkrChainApplication) BeginBlock(req types.RequestBeginBlock) types.R
 // Update the validator set
 func (app *AnkrChainApplication) EndBlock(req types.RequestEndBlock) types.ResponseEndBlock {
 	app.latestHeight = req.Height
+	if totalTxs, ok := appTxsPatchMap[req.Height]; ok {
+		app.app.SetTotalTx(totalTxs)
+	}
 	return types.ResponseEndBlock{ValidatorUpdates: val.ValidatorManagerInstance().ValUpdates()}
 }
