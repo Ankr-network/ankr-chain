@@ -118,7 +118,8 @@ func (ac *AnkrCoin) Transfer(toAddr string, amount string) bool {
 	balTo     = new(big.Int).Add(balTo, value)
 
 	stepGas := uint64(100000 * 2)
-	if ankrcmm.RM == ankrcmm.RunModeProd && ac.context.LatestHeight() < int64(2666829) {
+	if ankrcmm.RM == ankrcmm.RunModeProd && ac.context.LatestHeight() < int64(2666829) ||
+		ankrcmm.RM == ankrcmm.RunModeTesting && ac.context.LatestHeight() < int64(568000) {
 		stepGas = gas.GasSlowStep * 2
 	}
 
